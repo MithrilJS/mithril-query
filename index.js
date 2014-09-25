@@ -1,15 +1,21 @@
 var cssauron = require('cssauron');
-var _ = require('lodash');
 
+function isString(thing) {
+  return typeof thing === 'string';
+}
+
+function isArray(thing) {
+  return Object.prototype.toString.call(thing) === '[object Array]';
+}
 var language = cssauron({
   tag: function(node) {
     return node.tag;
   },
   contents: function(node) {
-    if (_.isString(node)) {
+    if (isString(node)) {
       return node;
     }
-    return _.isString(node.children) ? node.children : '';
+    return isString(node.children) ? node.children : '';
   },
   id: function(node) {
     if (node.attrs) {
@@ -38,9 +44,9 @@ var language = cssauron({
 
 function parse(rootEl) {
   function find(selector, subEl) {
-    selector = _.isString(selector) ? language(selector) : selector;
+    selector = isString(selector) ? language(selector) : selector;
     var el = subEl || rootEl;
-    var els = _.isArray(el) ? el : [el];
+    var els = isArray(el) ? el : [el];
     var foundEls = els.reduce(function(foundEls, el) {
       if (selector(el)) {
         foundEls.push(el);
@@ -60,17 +66,19 @@ function parse(rootEl) {
   }
   function contains(string, subEl) {
     el = subEl || rootEl;
-    var els = _.isArray(el) ? el : [el];
-    return _.any(els, function(el) {
-      if (_.isString(el)) {
+    var els = isArray(el) ? el : [el];
+    return els.some(function(el) {
+      if (isString(el)) {
         return el.indexOf(string) >= 0;
       }
-      if (_.isString(el.children)) {
+      if (isString(el.children)) {
         return el.children.indexOf(string) >= 0;
       }
-      return _.any(el.children, function(el) {
-        return contains(string, el);
-      })
+      if (el.children) {
+        return el.children.some(function(el) {
+          return contains(string, el);
+        });
+      }
     });
   }
 
