@@ -57,7 +57,7 @@ test('simple module', function(t) {
 
 Run the test with
 
-   tape simple.test.js
+    tape simple.test.js
 
 API
 ---
