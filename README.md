@@ -6,7 +6,7 @@ Query mithril virtual dom for testing purposes
 Installation
 ------------
 
-    npm install mithril --save-dev
+    npm install mithril-query --save-dev
 
 Usage
 -----
