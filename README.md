@@ -62,7 +62,7 @@ Run the test with
 API
 ---
 
-First call the view result with the mithril query function. THe result has the following methods:
+First call the view result with the `mithril-query` function. Tnen result has the following methods:
 
 ### first(selector)
 
