@@ -8,9 +8,7 @@ function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
 }
 var language = cssauron({
-  tag: function(node) {
-    return node.tag;
-  },
+  tag: 'tag',
   contents: function(node) {
     if (isString(node)) {
       return node;
@@ -29,9 +27,7 @@ var language = cssauron({
     }
     return '';
   },
-  parent: function(node) {
-    throw new Error('Since mithril has no way to determine parent node, traversing selecors are not implemented');
-  },
+  parent: 'parent',
   children: function(node) {
     return node.children;
   },
@@ -52,6 +48,11 @@ function parse(rootEl) {
         foundEls.push(el);
       }
       if (el.children) {
+        if (isArray(el.children)) {
+          el.children.forEach(function(child) {
+            child.parent = el;
+          });
+        }
         foundEls = foundEls.concat(find(selector, el.children));
       }
       return foundEls;

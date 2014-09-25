@@ -45,6 +45,7 @@ test('simple module', function(t) {
     var output = simple.view(simple.controller());
     $output = mq(output);
     t.ok($output.has('span'), 'should create span node');
+    t.ok($output.has('div > span'), 'child selectors \o/');
     t.ok($output.has('#fooId'), 'should create fooId node');
     t.ok($output.has('.barClass'), 'should create barClass node');
     t.ok($output.has(':contains(barContent)'), 'should create node with content barContent');
@@ -84,4 +85,4 @@ If you need any other assertions, feel free to create an issue or pull request.
 Selectors
 ---------
 
-Currently only single level selectors are supported. So you can do `span#foo.bar[selected=true]`, but you can't do `span# > .bar`. This limitation occurs, since we don't have a way to determine parent of current node in mithril. We use [cssauron](https://github.com/chrisdickinson/cssauron) as engine, so look there if you want to see, what's possible.
+We use [cssauron](https://github.com/chrisdickinson/cssauron) as engine, so look there if you want to see, what's possible.

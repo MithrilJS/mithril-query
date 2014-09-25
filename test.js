@@ -14,6 +14,7 @@ var el = m('div', [tagEl, concatClassEl, classEl, innerString, idEl, devilEl, id
 test('first', function(t) {
   t.equal(mq(el).first('span'), tagEl, 'select by tag should work');
   t.equal(mq(el).first('.one'), classEl, 'select by class should work');
+  t.equal(mq(el).first('div > .one'), classEl, 'select by child selector should work');
   t.equal(mq(el).first('.one'), classEl, 'select by class should work');
   t.equal(mq(el).first('.two.one'), classEl, 'select by class should work');
   t.equal(mq(el).first('#two'), idEl, 'select by id should work');
@@ -23,7 +24,6 @@ test('first', function(t) {
   t.equal(mq(el).first(':contains(Inner String)'), innerString, 'select by :content should work');
   t.end();
 });
-
 test('contains', function(t) {
   t.ok(mq(el).contains('DEVIL'), 'contain should work');
   t.ok(mq(el).contains('Inner String'), 'contain should work');
