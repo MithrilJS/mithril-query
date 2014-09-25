@@ -1,0 +1,31 @@
+{
+  "name": "mithril-query",
+  "version": "0.1.0",
+  "description": "Query mithril virtual dom for testing purposes",
+  "main": "index.js",
+  "scripts": {
+    "test": "node_modules/tape/bin/tape test.js "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:StephanHoyer/mithril-query.git"
+  },
+  "keywords": [
+    "mithril",
+    "query",
+    "test"
+  ],
+  "author": "Stephan Hoyer <ste.hoyer@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/StephanHoyer/mithril-query/issues"
+  },
+  "homepage": "https://github.com/StephanHoyer/mithril-query",
+  "devDependencies": {
+    "mithril": "^0.1.21",
+    "tape": "^3.0.0"
+  },
+  "dependencies": {
+    "cssauron": "^1.2.0"
+  }
+}
