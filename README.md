@@ -57,12 +57,12 @@ test('simple module', function(t) {
 
 Run the test with
 
-   tape simple.test.js
+    tape simple.test.js
 
 API
 ---
 
-First call the view result with the mithril query function. THe result has the following methods:
+First call the view result with the `mithril-query` function. Then the result has the following methods:
 
 ### first(selector)
 
