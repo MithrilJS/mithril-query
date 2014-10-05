@@ -75,6 +75,9 @@ function parse(rootEl) {
       if (isString(el.children)) {
         return el.children.indexOf(string) >= 0;
       }
+      if (el.children && el.children.children) {
+        return contains(string, el.children);
+      }
       if (el.children) {
         return el.children.some(function(el) {
           return contains(string, el);
