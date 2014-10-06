@@ -86,11 +86,18 @@ function parse(rootEl) {
     });
   }
 
+  function setValue(selector, string) {
+    first(selector).attrs.onchange({
+      currentTarget: {value: string}
+    });
+  }
+
   return {
     find: find,
     first: first,
     has: has,
-    contains: contains
+    contains: contains,
+    setValue: setValue
   };
 }
 
