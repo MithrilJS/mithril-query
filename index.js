@@ -1,3 +1,5 @@
+'use strict';
+
 var cssauron = require('cssauron');
 
 function isString(thing) {
@@ -47,15 +49,17 @@ function parse(rootEl) {
       if (selector(el)) {
         foundEls.push(el);
       }
-      if (el.children) {
-        if (isArray(el.children)) {
-          el.children.forEach(function(child) {
-            child.parent = el;
-          });
-        }
-        foundEls = foundEls.concat(find(selector, el.children));
+      // sometimes mithril spits out an array with only one undefined.
+      // The following if should catch that
+      if (!el.children || (el.children.length && !el.children[0])) {
+        return foundEls;
       }
-      return foundEls;
+      if (isArray(el.children)) {
+        el.children.forEach(function(child) {
+          child.parent = el;
+        });
+      }
+      return foundEls.concat(find(selector, el.children));
     }, []);
     return foundEls;
   }
@@ -66,7 +70,7 @@ function parse(rootEl) {
     return find(selector).length > 0;
   }
   function contains(string, subEl) {
-    el = subEl || rootEl;
+    var el = subEl || rootEl;
     var els = isArray(el) ? el : [el];
     return els.some(function(el) {
       if (isString(el)) {
@@ -87,7 +91,8 @@ function parse(rootEl) {
   }
 
   function setValue(selector, string) {
-    first(selector).attrs.onchange({
+    var attrs = first(selector).attrs;
+    (attrs.onchange || attrs.onkeyup)({
       currentTarget: {value: string}
     });
   }
