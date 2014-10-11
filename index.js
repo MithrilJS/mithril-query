@@ -49,16 +49,17 @@ function parse(rootEl) {
       if (selector(el)) {
         foundEls.push(el);
       }
+      if (isArray(el)) {
+        return foundEls.concat(find(selector, el));
+      }
       // sometimes mithril spits out an array with only one undefined.
       // The following if should catch that
-      if (!el.children || (el.children.length && !el.children[0])) {
+      if (isString(el.children) || !el.children || (el.children.length && !el.children[0])) {
         return foundEls;
       }
-      if (isArray(el.children)) {
-        el.children.forEach(function(child) {
-          child.parent = el;
-        });
-      }
+      el.children.forEach(function(child) {
+        child.parent = el;
+      });
       return foundEls.concat(find(selector, el.children));
     }, []);
     return foundEls;
@@ -92,7 +93,7 @@ function parse(rootEl) {
 
   function setValue(selector, string) {
     var attrs = first(selector).attrs;
-    (attrs.onchange || attrs.onkeyup)({
+    (attrs.oninput || attrs.onchange || attrs.onkeyup)({
       currentTarget: {value: string}
     });
   }

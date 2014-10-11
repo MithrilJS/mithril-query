@@ -9,7 +9,8 @@ var idEl = m('#two');
 var innerString = 'Inner String';
 var devilEl = m('.three', 'DEVIL');
 var idClassEl = m('#three.three');
-var el = m('div', [tagEl, concatClassEl, classEl, innerString, idEl, devilEl, idClassEl]);
+var arrayOfArrays = [[m('#arrayArray')]];
+var el = m('div', [tagEl, concatClassEl, classEl, innerString, idEl, devilEl, idClassEl, arrayOfArrays]);
 
 test('first', function(t) {
   t.equal(mq(el).first('span'), tagEl, 'select by tag should work');
@@ -22,6 +23,7 @@ test('first', function(t) {
   t.equal(mq(el).first('.three#three'), idClassEl, 'select by .class#id should work');
   t.equal(mq(el).first(':contains(DEVIL)'), devilEl, 'select by :content should work');
   t.equal(mq(el).first(':contains(Inner String)'), innerString, 'select by :content should work');
+  t.equal(mq(el).first('#arrayArray'), arrayOfArrays[0][0], 'select of array in array defined el should work');
   t.end();
 });
 test('contains', function(t) {
