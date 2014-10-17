@@ -1,5 +1,6 @@
 mithril-query
 =============
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/StephanHoyer/mithril-query?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Query mithril virtual dom for testing purposes
 
