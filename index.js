@@ -45,6 +45,7 @@ function parse(rootEl) {
     selector = isString(selector) ? language(selector) : selector;
     var el = subEl || rootEl;
     var els = isArray(el) ? el : [el];
+    els = els.filter(function(el) { return el !== undefined });
     var foundEls = els.reduce(function(foundEls, el) {
       if (selector(el)) {
         foundEls.push(el);
@@ -57,7 +58,7 @@ function parse(rootEl) {
       if (isString(el.children) || !el.children || (el.children.length && !el.children[0])) {
         return foundEls;
       }
-      el.children.forEach(function(child) {
+      el.children.filter(function(child) { return typeof child === 'object' }).forEach(function(child) {
         child.parent = el;
       });
       return foundEls.concat(find(selector, el.children));
