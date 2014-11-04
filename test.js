@@ -10,7 +10,7 @@ var innerString = 'Inner String';
 var devilEl = m('.three', 'DEVIL');
 var idClassEl = m('#three.three');
 var arrayOfArrays = [[m('#arrayArray')]];
-var el = m('div', [tagEl, concatClassEl, classEl, innerString, idEl, devilEl, idClassEl, arrayOfArrays]);
+var el = m('div', [tagEl, concatClassEl, classEl, innerString, idEl, devilEl, idClassEl, arrayOfArrays, undefined]);
 
 test('first', function(t) {
   t.equal(mq(el).first('span'), tagEl, 'select by tag should work');
