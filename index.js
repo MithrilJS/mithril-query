@@ -99,12 +99,24 @@ function parse(rootEl) {
     });
   }
 
+  function click(selector, event) {
+    var attrs = first(selector).attrs;
+    attrs.onclick(event);
+  }
+
+  function focus(selector, event) {
+    var attrs = first(selector).attrs;
+    attrs.onfocus(event);
+  }
+
   return {
     find: find,
     first: first,
     has: has,
     contains: contains,
-    setValue: setValue
+    setValue: setValue,
+    click: click,
+    focus: focus
   };
 }
 
