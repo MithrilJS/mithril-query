@@ -19,9 +19,10 @@ var innerString = 'Inner String';
 var devilEl = m('.three', 'DEVIL');
 var idClassEl = m('#three.three');
 var arrayOfArrays = [[m('#arrayArray')]];
-var eventEl = m('#eventEl', {
+var eventEl = m('input#eventEl', {
   onclick: function(evt) { events.onclick(evt); },
   onfocus: function(evt) { events.onfocus(evt); },
+  oninput: function(evt) { events.oninput(evt); }
 });
 var el = m('div', [tagEl, concatClassEl, classEl, innerString, idEl,
                    devilEl, idClassEl, arrayOfArrays, undefined, eventEl]);
@@ -44,7 +45,7 @@ test('first', function(t) {
 });
 
 test('events', function(t) {
-  t.plan(2);
+  t.plan(3);
   events.onclick = function() {
     t.ok(true, 'clickevent should be fired');
   };
@@ -53,6 +54,10 @@ test('events', function(t) {
     t.ok(true, 'focusevent should be fired');
   };
   mq(el).focus('#eventEl');
+  events.oninput = function(evt) {
+    t.equal(evt.currentTarget.value, 'huhu', 'value should be set');
+  };
+  mq(el).setValue('#eventEl', 'huhu');
 });
 
 test('contains', function(t) {
