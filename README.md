@@ -83,6 +83,24 @@ Returns `true` if any element in tree contains the string, otherwise `false`.
 
 If you need any other assertions, feel free to create an issue or pull request.
 
+Event triggering
+----------------
+
+It is also possible to trigger element events like `onfocus` and `onclick` and set values on `<input>`-fields. This allows you to write "integration tests" that run also on serverside.
+
+```javascript
+var el = [
+  m('input', {oninput: m.withAttr("value", name), value: name()})
+  m('#eventEl', {
+    onclick: onClickOfEventEl,
+    onfocus: onFocusOfEventEl,
+  })
+
+mq(el).click('#eventEl'); // triggers onClickOfEventEl
+mq(el).focus('#eventEl'); // triggers onFocusOfEventEl
+mq(el).setValue('input', 'huhu') //sets name prop to 'huhu'
+```
+
 Selectors
 ---------
 
