@@ -86,7 +86,7 @@ If you need any other assertions, feel free to create an issue or pull request.
 Event triggering
 ----------------
 
-It is also possible to trigger element events like `onfocus` and `onclick` and event to set values on input fields. This allows you to write "integration tests" that run also on serverside.
+It is also possible to trigger element events like `onfocus` and `onclick` and set values on `<input>`-fields. This allows you to write "integration tests" that run also on serverside.
 
 ```javascript
 var el = [
