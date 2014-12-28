@@ -109,6 +109,11 @@ function parse(rootEl) {
     attrs.onfocus(event);
   }
 
+  function blur(selector, event) {
+    var attrs = first(selector).attrs;
+    attrs.onblur(event);
+  }
+
   return {
     find: find,
     first: first,
@@ -116,7 +121,8 @@ function parse(rootEl) {
     contains: contains,
     setValue: setValue,
     click: click,
-    focus: focus
+    focus: focus,
+    blur: blur
   };
 }
 
