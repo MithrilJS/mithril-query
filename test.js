@@ -65,3 +65,37 @@ test('contains', function(t) {
   t.ok(mq(el).contains('Inner String'), 'contain should work');
   t.end();
 });
+
+test('should style assertions', function(t) {
+  mq(el).should.have('span');
+
+  t.throws(function() {
+    mq(el).should.have('table');
+  }, 'should throw when no element matches');
+
+  mq(el).should.have('.one');
+
+  t.throws(function() {
+    mq(el).should.have(3, 'div');
+  }, 'should throw with wrong count');
+
+  mq(el).should.have(7, 'div');
+
+  t.throws(function() {
+    mq(el).should.contain('XXXXX');
+  }, 'should throw when not containing');
+
+  mq(el).should.not.have('table');
+
+  t.throws(function() {
+    mq(el).should.not.have('span');
+  }, 'should throw when any element matches');
+
+  mq(el).should.not.contain('XXXXXX');
+
+  t.throws(function() {
+    mq(el).should.not.contain('DEVIL');
+  }, 'should throw when containing');
+
+  t.end();
+});

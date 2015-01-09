@@ -45,7 +45,7 @@ function parse(rootEl) {
     selector = isString(selector) ? language(selector) : selector;
     var el = subEl || rootEl;
     var els = isArray(el) ? el : [el];
-    els = els.filter(function(el) { return el !== undefined });
+    els = els.filter(function(el) { return el !== undefined; });
     var foundEls = els.reduce(function(foundEls, el) {
       if (selector(el)) {
         foundEls.push(el);
@@ -65,31 +65,64 @@ function parse(rootEl) {
     }, []);
     return foundEls;
   }
+
   function first(selector) {
     return find(selector)[0];
   }
+
   function has(selector) {
     return find(selector).length > 0;
   }
-  function contains(string, subEl) {
-    var el = subEl || rootEl;
-    var els = isArray(el) ? el : [el];
-    return els.some(function(el) {
-      if (isString(el)) {
-        return el.indexOf(string) >= 0;
-      }
-      if (isString(el.children)) {
-        return el.children.indexOf(string) >= 0;
-      }
-      if (el.children && el.children.children) {
-        return contains(string, el.children);
-      }
-      if (el.children) {
-        return el.children.some(function(el) {
-          return contains(string, el);
-        });
-      }
-    });
+
+  function contains(string, el) {
+    if (!el) {
+      return false;
+    }
+    if (isString(el)) {
+      return el.indexOf(string) >= 0;
+    }
+    if (isString(el.children)) {
+      return el.children.indexOf(string) >= 0;
+    }
+    if (isArray(el)) {
+      return el.some(function(child) {
+        return contains(string, child);
+      });
+    }
+    if (el.children && el.children.length) {
+      return el.children.some(function(child) {
+        return contains(string, child);
+      });
+    }
+    return false;
+  }
+
+  function shouldHave(expectedCount, selector) {
+    if (!selector) {
+      selector = expectedCount;
+      expectedCount = 1;
+    }
+    var actualCount = find(selector).length;
+    if (actualCount !== expectedCount) {
+      throw 'Wrong count of elements that matches "' + selector +
+            '"\n  expected: ' + expectedCount + '\n  actual: ' + actualCount;
+    }
+  }
+
+  function shouldNotHave(selector) {
+    shouldHave(0, selector);
+  }
+
+  function shouldContain(string) {
+    if (!contains(string, rootEl)) {
+      throw 'Expected "' + string + '" not found!';
+    }
+  }
+
+  function shouldNotContain(string) {
+    if (contains(string, rootEl)) {
+      throw 'Unexpected "' + string + '" found!';
+    }
   }
 
   function setValue(selector, string) {
@@ -118,11 +151,19 @@ function parse(rootEl) {
     find: find,
     first: first,
     has: has,
-    contains: contains,
+    contains: function(string) { return contains(string, rootEl); },
     setValue: setValue,
     click: click,
     focus: focus,
-    blur: blur
+    blur: blur,
+    should: {
+      not: {
+        have: shouldNotHave,
+        contain: shouldNotContain,
+      },
+      have: shouldHave,
+      contain: shouldContain
+    }
   };
 }
 
