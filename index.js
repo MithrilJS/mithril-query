@@ -122,13 +122,13 @@ function parse(rootEl) {
 
   function shouldContain(string) {
     if (!contains(string, rootEl)) {
-      throw 'Expected "' + string + '" not found!';
+      throw new Error('Expected "' + string + '" not found!');
     }
   }
 
   function shouldNotContain(string) {
     if (contains(string, rootEl)) {
-      throw 'Unexpected "' + string + '" found!';
+      throw new Error('Unexpected "' + string + '" found!');
     }
   }
 
