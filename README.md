@@ -84,6 +84,32 @@ Returns `true` if any element in tree contains the string, otherwise `false`.
 
 If you need any other assertions, feel free to create an issue or pull request.
 
+Should style assertions
+-----------------------
+
+Now you can use these nice asserions. They throw errors if they're not fullfiled.
+
+```javascript
+// test for simple module: simple.test.js
+var test = require('tape').test;
+var simple = require('./simple');
+var mq = require('mithril-query');
+
+test('simple module', function(t) {
+  t.test('view', function(t) {
+    var output = simple.view(simple.controller());
+    $output = mq(output);
+    $output.should.have('span'); //asserts to have at least one span element
+    $output.should.have(4,'.even'); //asserts to have four elements with class 'even'
+    $output.should.have.at.least(4,'li'); //asserts to have at least four li-elements
+    $output.should.not.have('#main'); //asserts to not have an element with id 'main'
+    $output.should.contain('hi'); //asserts to contain the string 'hi'
+    $output.should.not.contain('bye'); //asserts to not contain the string 'bye'
+    t.end();
+  });
+});
+```
+
 Event triggering
 ----------------
 
