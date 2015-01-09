@@ -67,35 +67,53 @@ test('contains', function(t) {
 });
 
 test('should style assertions', function(t) {
-  mq(el).should.have('span');
+  t.doesNotThrow(function() {
+    mq(el).should.have('span');
+  }, 'should not when true');
 
   t.throws(function() {
     mq(el).should.have('table');
   }, 'should throw when no element matches');
 
-  mq(el).should.have('.one');
+  t.doesNotThrow(function() {
+    mq(el).should.have('.one');
+  }, 'should not when true');
 
   t.throws(function() {
     mq(el).should.have(3, 'div');
   }, 'should throw with wrong count');
 
-  mq(el).should.have(7, 'div');
+  t.doesNotThrow(function() {
+    mq(el).should.have(7, 'div');
+  }, 'should not when true');
 
   t.throws(function() {
     mq(el).should.contain('XXXXX');
   }, 'should throw when not containing');
 
-  mq(el).should.not.have('table');
+  t.doesNotThrow(function() {
+    mq(el).should.not.have('table');
+  }, 'should not when true');
 
   t.throws(function() {
     mq(el).should.not.have('span');
   }, 'should throw when any element matches');
 
-  mq(el).should.not.contain('XXXXXX');
+  t.doesNotThrow(function() {
+    mq(el).should.not.contain('XXXXXX');
+  }, 'should not when true');
 
   t.throws(function() {
     mq(el).should.not.contain('DEVIL');
   }, 'should throw when containing');
+
+  t.doesNotThrow(function() {
+    mq(el).should.have.at.least(4, 'div');
+  }, 'should not when true');
+
+  t.throws(function() {
+    mq(el).should.have.at.least(8, 'div');
+  }, 'should throw when not enought elements');
 
   t.end();
 });

@@ -97,10 +97,17 @@ function parse(rootEl) {
     return false;
   }
 
+  function shouldHaveAtLeast(minCount, selector) {
+    var actualCount = find(selector).length;
+    if (actualCount < minCount) {
+      throw 'Wrong count of elements that matches "' + selector +
+            '"\n  expected: >=' + minCount + '\n  actual: ' + actualCount;
+    }
+  }
+
   function shouldHave(expectedCount, selector) {
     if (!selector) {
-      selector = expectedCount;
-      expectedCount = 1;
+      return shouldHaveAtLeast(1, expectedCount);
     }
     var actualCount = find(selector).length;
     if (actualCount !== expectedCount) {
@@ -146,6 +153,10 @@ function parse(rootEl) {
     var attrs = first(selector).attrs;
     attrs.onblur(event);
   }
+
+  shouldHave.at = {
+    least: shouldHaveAtLeast
+  };
 
   return {
     find: find,
