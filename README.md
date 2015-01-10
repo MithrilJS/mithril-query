@@ -87,7 +87,7 @@ If you need any other assertions, feel free to create an issue or pull request.
 Should style assertions
 -----------------------
 
-Now you can use these nice asserions. They throw errors if they're not fullfiled.
+Now you can use these nice assertions. They throw errors if they're not fullfiled.
 
 ```javascript
 // test for simple module: simple.test.js
