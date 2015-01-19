@@ -19,13 +19,14 @@ var innerString = 'Inner String';
 var devilEl = m('.three', 'DEVIL');
 var idClassEl = m('#three.three');
 var arrayOfArrays = [[m('#arrayArray')]];
+var numbah = 10;
 var eventEl = m('input#eventEl', {
   onclick: function(evt) { events.onclick(evt); },
   onfocus: function(evt) { events.onfocus(evt); },
   oninput: function(evt) { events.oninput(evt); }
 });
 var el = m('div', [tagEl, concatClassEl, classEl, innerString, idEl,
-                   devilEl, idClassEl, arrayOfArrays, undefined, eventEl]);
+                   devilEl, idClassEl, arrayOfArrays, undefined, eventEl, numbah]);
 
 test('first', function(t) {
   t.equal(mq(el).first('span'), tagEl, 'select by tag should work');
@@ -63,6 +64,7 @@ test('events', function(t) {
 test('contains', function(t) {
   t.ok(mq(el).contains('DEVIL'), 'contain should work');
   t.ok(mq(el).contains('Inner String'), 'contain should work');
+  t.ok(mq(el).contains(numbah), 'contain should work for numbers');
   t.end();
 });
 
