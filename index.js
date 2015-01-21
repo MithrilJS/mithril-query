@@ -5,7 +5,9 @@ var cssauron = require('cssauron');
 function isString(thing) {
   return typeof thing === 'string';
 }
-
+function isNumber(thing) {
+  return typeof thing === 'number';
+}
 function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
 }
@@ -74,24 +76,30 @@ function parse(rootEl) {
     return find(selector).length > 0;
   }
 
-  function contains(string, el) {
+  function contains(value, el) {
     if (!el) {
       return false;
     }
     if (isString(el)) {
-      return el.indexOf(string) >= 0;
+      return el.indexOf(value) >= 0;
     }
     if (isString(el.children)) {
-      return el.children.indexOf(string) >= 0;
+      return el.children.indexOf(value) >= 0;
+    }
+    if (isNumber(el)) {
+      return el === value;  
+    }
+    if (isNumber(el.children)) {
+      return el.children === value;  
     }
     if (isArray(el)) {
       return el.some(function(child) {
-        return contains(string, child);
+        return contains(value, child);
       });
     }
     if (el.children && el.children.length) {
       return el.children.some(function(child) {
-        return contains(string, child);
+        return contains(value, child);
       });
     }
     return false;
@@ -162,7 +170,7 @@ function parse(rootEl) {
     find: find,
     first: first,
     has: has,
-    contains: function(string) { return contains(string, rootEl); },
+    contains: function(value) { return contains(value, rootEl); },
     setValue: setValue,
     click: click,
     focus: focus,
