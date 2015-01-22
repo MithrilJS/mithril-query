@@ -201,6 +201,7 @@ function parse(viewOrModuleOrRootEl, scope) {
     click: click,
     focus: focus,
     blur: blur,
+    redraw: redraw,
     should: {
       not: {
         have: shouldNotHave,
