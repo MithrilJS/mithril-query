@@ -43,12 +43,14 @@ var language = cssauron({
 });
 
 function parse(viewOrModuleOrRootEl, scope) {
-  var redraw = function(){};
+  var api = {};
+  var redraw = function(){ return api; };
   var rootEl = viewOrModuleOrRootEl;
   if (typeof viewOrModuleOrRootEl === 'function') {
     var view = viewOrModuleOrRootEl;
     redraw = function() {
       rootEl = view(scope);
+      return api;
     };
     redraw();
   } else if (viewOrModuleOrRootEl.controller && viewOrModuleOrRootEl.view) {
@@ -56,6 +58,7 @@ function parse(viewOrModuleOrRootEl, scope) {
     scope = new module.controller();
     redraw = function() {
       rootEl = module.view(scope);
+      return api;
     };
     redraw();
   }
@@ -192,25 +195,29 @@ function parse(viewOrModuleOrRootEl, scope) {
     least: shouldHaveAtLeast
   };
 
-  return {
-    find: find,
-    first: first,
-    has: has,
-    contains: function(value) { return contains(value, rootEl); },
-    setValue: setValue,
-    click: click,
-    focus: focus,
-    blur: blur,
-    redraw: redraw,
-    should: {
-      not: {
-        have: shouldNotHave,
-        contain: shouldNotContain,
-      },
-      have: shouldHave,
-      contain: shouldContain
-    }
+  api.find = find;
+  api.first = first;
+  api.has = has;
+  api.contains = function(value) {
+    return contains(value, rootEl);
   };
+  api.setValue = setValue;
+  api.click = click;
+  api.focus = focus;
+  api.blur = blur;
+  api.redraw = redraw;
+  api.onunload = function() {
+    scope.onunload && scope.onunload();
+  },
+  api.should = {
+    not: {
+      have: shouldNotHave,
+      contain: shouldNotContain,
+    },
+    have: shouldHave,
+    contain: shouldContain
+  };
+  return api;
 }
 
 module.exports = parse;
