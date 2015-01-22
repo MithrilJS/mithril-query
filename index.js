@@ -43,6 +43,15 @@ var language = cssauron({
 });
 
 function parse(rootEl) {
+  var redraw = function(){};
+  if (rootEl.controller && rootEl.view) {
+    var module = rootEl;
+    var scope = new module.controller();
+    redraw = function() {
+      rootEl = module.view(scope);
+    };
+    redraw();
+  }
   function find(selector, subEl) {
     selector = isString(selector) ? language(selector) : selector;
     var el = subEl || rootEl;
@@ -60,7 +69,9 @@ function parse(rootEl) {
       if (isString(el.children) || !el.children || (el.children.length && !el.children[0])) {
         return foundEls;
       }
-      el.children.filter(function(child) { return typeof child === 'object' }).forEach(function(child) {
+      el.children.filter(function(child) {
+        return typeof child === 'object';
+      }).forEach(function(child) {
         child.parent = el;
       });
       return foundEls.concat(find(selector, el.children));
@@ -69,7 +80,11 @@ function parse(rootEl) {
   }
 
   function first(selector) {
-    return find(selector)[0];
+    var el = find(selector)[0];
+    if (!el) {
+      throw new Error('No element matches ' + selector);
+    }
+    return el;
   }
 
   function has(selector) {
@@ -140,26 +155,30 @@ function parse(rootEl) {
     }
   }
 
-  function setValue(selector, string) {
+  function setValue(selector, string, silent) {
     var attrs = first(selector).attrs;
     (attrs.oninput || attrs.onchange || attrs.onkeyup)({
       currentTarget: {value: string}
     });
+    silent || redraw();
   }
 
-  function click(selector, event) {
+  function click(selector, event, silent) {
     var attrs = first(selector).attrs;
     attrs.onclick(event);
+    silent || redraw();
   }
 
-  function focus(selector, event) {
+  function focus(selector, event, silent) {
     var attrs = first(selector).attrs;
     attrs.onfocus(event);
+    silent || redraw();
   }
 
-  function blur(selector, event) {
+  function blur(selector, event, silent) {
     var attrs = first(selector).attrs;
     attrs.onblur(event);
+    silent || redraw();
   }
 
   shouldHave.at = {

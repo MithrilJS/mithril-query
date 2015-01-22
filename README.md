@@ -128,6 +128,45 @@ mq(el).focus('#eventEl'); // triggers onFocusOfEventEl
 mq(el).setValue('input', 'huhu') //sets name prop to 'huhu'
 ```
 
+Auto Rendering
+--------------
+
+You can also use auto rendering like mithril does. If you call the query
+function with a module, it instantiates the controller and calls the view with
+it's result. When using one of the upper events, redraw of the view is
+automatically called.
+
+Example:
+
+```javascript
+  // module code
+  var module = {
+    controller: function() {
+      var scope = {
+        visible: true,
+        toggleMe: function() { scope.visible = !scope.visible; }
+      };
+      return scope;
+    },
+    view: function(scope) {
+      return m(scope.visible ? '.visible' : '.hidden', {
+        onclick: scope.toggleMe
+      }, 'Test');
+    }
+  };
+
+  // actual test
+  var $out = mq(module);
+  $out.should.have('.visible');
+  $out.click('.visible');
+  $out.should.have('.hidden');
+  $out.click('.hidden', null, true);
+  $out.should.have('.hidden');
+```
+
+As you can see, you can prevent autoredraw by providing a `true` as last
+argument to `click` method. This also works for `blur`, `focus` and `setValue`.
+
 Selectors
 ---------
 

@@ -119,3 +119,28 @@ test('should style assertions', function(t) {
 
   t.end();
 });
+
+test('autorerender', function(t) {
+  var module = {
+    controller: function() {
+      var scope = {
+        visible: true,
+        toggleMe: function() { scope.visible = !scope.visible; }
+      };
+      return scope;
+    },
+    view: function(scope) {
+      return m(scope.visible ? '.visible' : '.hidden', {
+        onclick: scope.toggleMe
+      }, 'Test');
+    }
+  };
+
+  var $out = mq(module);
+  $out.should.have('.visible');
+  $out.click('.visible');
+  $out.should.have('.hidden');
+  $out.click('.hidden', null, true);
+  $out.should.have('.hidden');
+  t.end();
+});
