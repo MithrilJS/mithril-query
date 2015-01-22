@@ -42,11 +42,18 @@ var language = cssauron({
   }
 });
 
-function parse(rootEl) {
+function parse(viewOrModuleOrRootEl, scope) {
   var redraw = function(){};
-  if (rootEl.controller && rootEl.view) {
-    var module = rootEl;
-    var scope = new module.controller();
+  var rootEl = viewOrModuleOrRootEl;
+  if (typeof viewOrModuleOrRootEl === 'function') {
+    var view = viewOrModuleOrRootEl;
+    redraw = function() {
+      rootEl = view(scope);
+    };
+    redraw();
+  } else if (viewOrModuleOrRootEl.controller && viewOrModuleOrRootEl.view) {
+    var module = viewOrModuleOrRootEl;
+    scope = new module.controller();
     redraw = function() {
       rootEl = module.view(scope);
     };

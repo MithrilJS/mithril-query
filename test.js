@@ -120,7 +120,7 @@ test('should style assertions', function(t) {
   t.end();
 });
 
-test('autorerender', function(t) {
+test('autorerender module', function(t) {
   var module = {
     controller: function() {
       var scope = {
@@ -137,6 +137,23 @@ test('autorerender', function(t) {
   };
 
   var $out = mq(module);
+  $out.should.have('.visible');
+  $out.click('.visible');
+  $out.should.have('.hidden');
+  $out.click('.hidden', null, true);
+  $out.should.have('.hidden');
+  t.end();
+});
+
+test('autorerender function', function(t) {
+  function view(scope) {
+    return m(scope.visible ? '.visible' : '.hidden', {
+      onclick: function() { scope.visible = !scope.visible; }
+    }, 'Test');
+  }
+
+  var scope = { visible: true };
+  var $out = mq(view, scope);
   $out.should.have('.visible');
   $out.click('.visible');
   $out.should.have('.hidden');
