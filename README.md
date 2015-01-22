@@ -167,6 +167,28 @@ Example:
 As you can see, you can prevent autoredraw by providing a `true` as last
 argument to `click` method. This also works for `blur`, `focus` and `setValue`.
 
+You can also manually trigger redraw:
+
+```javascript
+var $out = mq(module);
+$out.should.have('.visible');
+$out.redraw();
+```
+
+It's also possible to insert a view and a scope, just in case you don't follow
+the standard mithril pattern (controller/view)... like I do sometimes ;)
+
+```javascript
+var scope = {
+  isVisible: true;
+}
+
+var $out = mq(view, scope);
+$out.should.have('.visible');
+$out.click('.visible');
+$out.should.have('.hidden');
+```
+
 Selectors
 ---------
 
