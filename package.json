@@ -1,6 +1,6 @@
 {
   "name": "mithril-query",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Query mithril virtual dom for testing purposes",
   "main": "index.js",
   "scripts": {
