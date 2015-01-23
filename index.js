@@ -55,7 +55,7 @@ function parse(viewOrModuleOrRootEl, scope) {
     redraw();
   } else if (viewOrModuleOrRootEl.controller && viewOrModuleOrRootEl.view) {
     var module = viewOrModuleOrRootEl;
-    scope = new module.controller();
+    scope = new module.controller(scope);
     redraw = function() {
       rootEl = module.view(scope);
       return api;
