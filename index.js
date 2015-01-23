@@ -167,9 +167,13 @@ function parse(viewOrModuleOrRootEl, scope) {
 
   function setValue(selector, string, silent) {
     var attrs = first(selector).attrs;
-    (attrs.oninput || attrs.onchange || attrs.onkeyup)({
-      currentTarget: {value: string}
-    });
+    var event = {
+      currentTarget: {value: string},
+      target: {value: string}
+    };
+    attrs.oninput && attrs.oninput(event);
+    attrs.onchange && attrs.onchange(event);
+    attrs.onkeyup && attrs.onkeyup(event);
     silent || redraw();
   }
 
