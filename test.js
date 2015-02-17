@@ -166,3 +166,34 @@ test('autorerender function', function(t) {
   $out.should.have('.hidden');
   t.end();
 });
+
+test('onunload', function(t) {
+  t.test('init with view, scope', function(t) {
+    function view() {}
+    var scope = {
+      onunload: t.end
+    };
+    var $out = mq(view, scope);
+    $out.onunload();
+  });
+  t.test('init with rendered view', function(t) {
+    function view() {
+      return 'foo';
+    }
+    var $out = mq(view());
+    t.doesNotThrow($out.onunload);
+    t.end();
+  });
+  t.test('init with module', function(t) {
+    var module = {
+      view: function() {},
+      controller: function() {
+        return {
+          onunload: t.end
+        };
+      }
+    };
+    var $out = mq(module);
+    $out.onunload();
+  });
+});

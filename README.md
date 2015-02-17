@@ -189,6 +189,32 @@ $out.click('.visible');
 $out.should.have('.hidden');
 ```
 
+`onunload`-handling
+-------------------
+
+If you use the auto-rendering feature mentioned above you might want to also
+call `onunload` to on the controller response after testing. We added a
+reference to the controller `onunload` function to the result of the mithril query
+function.
+
+```javascript
+var module = {
+  controller: function() {
+    return {
+      onunload: function() {
+        //clean up stuff
+      }
+    };
+  },
+  view: function(scope) {
+    // do what ever
+  }
+};
+
+var $out = mq(module);
+$out.onunload(); // calls upper defined onunload on the controller result
+```
+
 Selectors
 ---------
 

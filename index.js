@@ -5,12 +5,15 @@ var cssauron = require('cssauron');
 function isString(thing) {
   return typeof thing === 'string';
 }
+
 function isNumber(thing) {
   return typeof thing === 'number';
 }
+
 function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
 }
+
 var language = cssauron({
   tag: 'tag',
   contents: function(node) {
@@ -43,15 +46,15 @@ var language = cssauron({
 });
 
 function find(selector, el) {
-  selector = isString(selector) ? language(selector) : selector;
+  var matchesSelector = isString(selector) ? language(selector) : selector;
   var els = isArray(el) ? el : [el];
   els = els.filter(function(el) { return el !== undefined; });
   var foundEls = els.reduce(function(foundEls, el) {
-    if (selector(el)) {
+    if (matchesSelector(el)) {
       foundEls.push(el);
     }
     if (isArray(el)) {
-      return foundEls.concat(find(selector, el));
+      return foundEls.concat(find(matchesSelector, el));
     }
     if (
       isString(el.children) ||
@@ -66,12 +69,12 @@ function find(selector, el) {
     }).forEach(function(child) {
       child.parent = el;
     });
-    return foundEls.concat(find(selector, el.children));
+    return foundEls.concat(find(matchesSelector, el.children));
   }, []);
   return foundEls;
 }
 
-function parse(render, scope) {
+function scan(render) {
   var rootEl = render();
   var api = {};
 
@@ -201,9 +204,6 @@ function parse(render, scope) {
   api.focus = focus;
   api.click = click;
   api.blur = blur;
-  api.onunload = function() {
-    scope.onunload && scope.onunload();
-  },
   api.should = {
     not: {
       have: shouldNotHave,
@@ -216,24 +216,26 @@ function parse(render, scope) {
 }
 
 function init(viewOrModuleOrRootEl, scope) {
+  var api = {};
   var isViewFunction = typeof viewOrModuleOrRootEl === 'function';
-  if (isViewFunction) {
-    return parse(function() {
-      return viewOrModuleOrRootEl(scope);
-    }, scope);
-  }
   var isModule = viewOrModuleOrRootEl.controller && viewOrModuleOrRootEl.view;
-  if (isModule) {
+  if (isViewFunction) {
+    api = scan(function() {
+      return viewOrModuleOrRootEl(scope);
+    });
+  } else if (isModule) {
     scope = new viewOrModuleOrRootEl.controller(scope);
-    return parse(function() {
+    api = scan(function() {
       return viewOrModuleOrRootEl.view(scope);
-    }, scope);
+    });
+  } else {
+    // assume that first argument is rendered view
+    api = scan(function() {
+      return viewOrModuleOrRootEl;
+    });
   }
-  // assume that first argument is rendered view
-  return parse(function() {
-    return viewOrModuleOrRootEl;
-  });
+  api.onunload = (scope && scope.onunload) ? scope.onunload : function() {};
+  return api;
 }
-
 
 module.exports = init;
