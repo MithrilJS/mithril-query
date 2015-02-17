@@ -45,6 +45,11 @@ test('first', function(t) {
   t.end();
 });
 
+test('find', function(t) {
+  t.deepEqual(mq(el).find('span'), [tagEl], 'find by tag should work');
+  t.end();
+});
+
 test('events', function(t) {
   t.plan(3);
   events.onclick = function() {

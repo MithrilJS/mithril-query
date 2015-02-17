@@ -42,55 +42,41 @@ var language = cssauron({
   }
 });
 
-function parse(viewOrModuleOrRootEl, scope) {
-  var api = {};
-  var redraw = function(){ return api; };
-  var rootEl = viewOrModuleOrRootEl;
-  if (typeof viewOrModuleOrRootEl === 'function') {
-    var view = viewOrModuleOrRootEl;
-    redraw = function() {
-      rootEl = view(scope);
-      return api;
-    };
-    redraw();
-  } else if (viewOrModuleOrRootEl.controller && viewOrModuleOrRootEl.view) {
-    var module = viewOrModuleOrRootEl;
-    scope = new module.controller(scope);
-    redraw = function() {
-      rootEl = module.view(scope);
-      return api;
-    };
-    redraw();
-  }
-  function find(selector, subEl) {
-    selector = isString(selector) ? language(selector) : selector;
-    var el = subEl || rootEl;
-    var els = isArray(el) ? el : [el];
-    els = els.filter(function(el) { return el !== undefined; });
-    var foundEls = els.reduce(function(foundEls, el) {
-      if (selector(el)) {
-        foundEls.push(el);
-      }
-      if (isArray(el)) {
-        return foundEls.concat(find(selector, el));
-      }
+function find(selector, el) {
+  selector = isString(selector) ? language(selector) : selector;
+  var els = isArray(el) ? el : [el];
+  els = els.filter(function(el) { return el !== undefined; });
+  var foundEls = els.reduce(function(foundEls, el) {
+    if (selector(el)) {
+      foundEls.push(el);
+    }
+    if (isArray(el)) {
+      return foundEls.concat(find(selector, el));
+    }
+    if (
+      isString(el.children) ||
+      !el.children ||
       // sometimes mithril spits out an array with only one undefined.
-      // The following if should catch that
-      if (isString(el.children) || !el.children || (el.children.length && !el.children[0])) {
-        return foundEls;
-      }
-      el.children.filter(function(child) {
-        return typeof child === 'object';
-      }).forEach(function(child) {
-        child.parent = el;
-      });
-      return foundEls.concat(find(selector, el.children));
-    }, []);
-    return foundEls;
-  }
+      (isArray(el.children) && !el.children[0])
+    ) {
+      return foundEls;
+    }
+    el.children.filter(function(child) {
+      return typeof child === 'object';
+    }).forEach(function(child) {
+      child.parent = el;
+    });
+    return foundEls.concat(find(selector, el.children));
+  }, []);
+  return foundEls;
+}
+
+function parse(render, scope) {
+  var rootEl = render();
+  var api = {};
 
   function first(selector) {
-    var el = find(selector)[0];
+    var el = find(selector, rootEl)[0];
     if (!el) {
       throw new Error('No element matches ' + selector);
     }
@@ -98,7 +84,7 @@ function parse(viewOrModuleOrRootEl, scope) {
   }
 
   function has(selector) {
-    return find(selector).length > 0;
+    return find(selector, rootEl).length > 0;
   }
 
   function contains(value, el) {
@@ -112,10 +98,10 @@ function parse(viewOrModuleOrRootEl, scope) {
       return el.children.indexOf(value) >= 0;
     }
     if (isNumber(el)) {
-      return el === value;  
+      return el === value;
     }
     if (isNumber(el.children)) {
-      return el.children === value;  
+      return el.children === value;
     }
     if (isArray(el)) {
       return el.some(function(child) {
@@ -131,7 +117,7 @@ function parse(viewOrModuleOrRootEl, scope) {
   }
 
   function shouldHaveAtLeast(minCount, selector) {
-    var actualCount = find(selector).length;
+    var actualCount = find(selector, rootEl).length;
     if (actualCount < minCount) {
       throw new Error('Wrong count of elements that matches "' + selector +
             '"\n  expected: >=' + minCount + '\n  actual: ' + actualCount);
@@ -142,7 +128,7 @@ function parse(viewOrModuleOrRootEl, scope) {
     if (!selector) {
       return shouldHaveAtLeast(1, expectedCount);
     }
-    var actualCount = find(selector).length;
+    var actualCount = find(selector, rootEl).length;
     if (actualCount !== expectedCount) {
       throw new Error('Wrong count of elements that matches "' + selector +
             '"\n  expected: ' + expectedCount + '\n  actual: ' + actualCount);
@@ -174,42 +160,47 @@ function parse(viewOrModuleOrRootEl, scope) {
     attrs.oninput && attrs.oninput(event);
     attrs.onchange && attrs.onchange(event);
     attrs.onkeyup && attrs.onkeyup(event);
-    silent || redraw();
+    silent || api.redraw();
   }
 
   function click(selector, event, silent) {
     var attrs = first(selector).attrs;
     attrs.onclick(event);
-    silent || redraw();
+    silent || api.redraw();
   }
 
   function focus(selector, event, silent) {
     var attrs = first(selector).attrs;
     attrs.onfocus(event);
-    silent || redraw();
+    silent || api.redraw();
   }
 
   function blur(selector, event, silent) {
     var attrs = first(selector).attrs;
     attrs.onblur(event);
-    silent || redraw();
+    silent || api.redraw();
   }
 
   shouldHave.at = {
     least: shouldHaveAtLeast
   };
 
-  api.find = find;
+  api.redraw = function() {
+    rootEl = render();
+    return api;
+  };
   api.first = first;
   api.has = has;
   api.contains = function(value) {
     return contains(value, rootEl);
   };
+  api.find = function(selector) {
+    return find(selector, rootEl);
+  },
   api.setValue = setValue;
-  api.click = click;
   api.focus = focus;
+  api.click = click;
   api.blur = blur;
-  api.redraw = redraw;
   api.onunload = function() {
     scope.onunload && scope.onunload();
   },
@@ -224,4 +215,25 @@ function parse(viewOrModuleOrRootEl, scope) {
   return api;
 }
 
-module.exports = parse;
+function init(viewOrModuleOrRootEl, scope) {
+  var isViewFunction = typeof viewOrModuleOrRootEl === 'function';
+  if (isViewFunction) {
+    return parse(function() {
+      return viewOrModuleOrRootEl(scope);
+    }, scope);
+  }
+  var isModule = viewOrModuleOrRootEl.controller && viewOrModuleOrRootEl.view;
+  if (isModule) {
+    scope = new viewOrModuleOrRootEl.controller(scope);
+    return parse(function() {
+      return viewOrModuleOrRootEl.view(scope);
+    }, scope);
+  }
+  // assume that first argument is rendered view
+  return parse(function() {
+    return viewOrModuleOrRootEl;
+  });
+}
+
+
+module.exports = init;
