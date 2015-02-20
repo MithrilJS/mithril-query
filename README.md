@@ -189,6 +189,12 @@ $out.click('.visible');
 $out.should.have('.hidden');
 ```
 
+If you need to access the rendered root element you can simply access it with
+
+```javascript
+$out.rootEl
+```
+
 `onunload`-handling
 -------------------
 

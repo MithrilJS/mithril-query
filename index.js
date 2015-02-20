@@ -75,11 +75,12 @@ function find(selector, el) {
 }
 
 function scan(render) {
-  var rootEl = render();
-  var api = {};
+  var api = {
+    rootEl: render()
+  };
 
   function first(selector) {
-    var el = find(selector, rootEl)[0];
+    var el = find(selector, api.rootEl)[0];
     if (!el) {
       throw new Error('No element matches ' + selector);
     }
@@ -87,7 +88,7 @@ function scan(render) {
   }
 
   function has(selector) {
-    return find(selector, rootEl).length > 0;
+    return find(selector, api.rootEl).length > 0;
   }
 
   function contains(value, el) {
@@ -120,7 +121,7 @@ function scan(render) {
   }
 
   function shouldHaveAtLeast(minCount, selector) {
-    var actualCount = find(selector, rootEl).length;
+    var actualCount = find(selector, api.rootEl).length;
     if (actualCount < minCount) {
       throw new Error('Wrong count of elements that matches "' + selector +
             '"\n  expected: >=' + minCount + '\n  actual: ' + actualCount);
@@ -131,7 +132,7 @@ function scan(render) {
     if (!selector) {
       return shouldHaveAtLeast(1, expectedCount);
     }
-    var actualCount = find(selector, rootEl).length;
+    var actualCount = find(selector, api.rootEl).length;
     if (actualCount !== expectedCount) {
       throw new Error('Wrong count of elements that matches "' + selector +
             '"\n  expected: ' + expectedCount + '\n  actual: ' + actualCount);
@@ -143,13 +144,13 @@ function scan(render) {
   }
 
   function shouldContain(string) {
-    if (!contains(string, rootEl)) {
+    if (!contains(string, api.rootEl)) {
       throw new Error('Expected "' + string + '" not found!');
     }
   }
 
   function shouldNotContain(string) {
-    if (contains(string, rootEl)) {
+    if (contains(string, api.rootEl)) {
       throw new Error('Unexpected "' + string + '" found!');
     }
   }
@@ -189,16 +190,16 @@ function scan(render) {
   };
 
   api.redraw = function() {
-    rootEl = render();
+    api.rootEl = render();
     return api;
   };
   api.first = first;
   api.has = has;
   api.contains = function(value) {
-    return contains(value, rootEl);
+    return contains(value, api.rootEl);
   };
   api.find = function(selector) {
-    return find(selector, rootEl);
+    return find(selector, api.rootEl);
   },
   api.setValue = setValue;
   api.focus = focus;
