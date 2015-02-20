@@ -197,3 +197,18 @@ test('onunload', function(t) {
     $out.onunload();
   });
 });
+
+test('null objects', function(t) {
+  t.test('init with null elements', function(t) {
+    function view() {
+      return [
+        null,
+        m('input'),
+        null
+      ];
+    }
+    var $out = mq(view());
+    t.doesNotThrow($out.should.have.bind($out.should.have, 'input'));
+    t.end();
+  });
+});
