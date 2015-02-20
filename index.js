@@ -183,6 +183,10 @@ function scan(render) {
     attrs.onblur(event);
     silent || api.redraw();
   }
+  
+  function root() {
+    return rootEl;
+  }
 
   shouldHave.at = {
     least: shouldHaveAtLeast
@@ -212,6 +216,7 @@ function scan(render) {
     have: shouldHave,
     contain: shouldContain
   };
+  api.root = root;
   return api;
 }
 

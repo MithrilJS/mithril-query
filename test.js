@@ -212,3 +212,14 @@ test('null objects', function(t) {
     t.end();
   });
 });
+
+test('access root element', function(t) {
+  t.test('call root() to access root element', function(t) {
+    function view() {
+      return m('div', ['foo', 'bar']);
+    }
+    var $out = mq(view);
+    t.deepEqual($out.root(), view());
+    t.end();
+  });
+});
