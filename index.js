@@ -48,7 +48,7 @@ var language = cssauron({
 function find(selector, el) {
   var matchesSelector = isString(selector) ? language(selector) : selector;
   var els = isArray(el) ? el : [el];
-  els = els.filter(function(el) { return el !== undefined; });
+  els = els.filter(function(el) { return el !== undefined && el !== null; });
   var foundEls = els.reduce(function(foundEls, el) {
     if (matchesSelector(el)) {
       foundEls.push(el);
@@ -65,7 +65,7 @@ function find(selector, el) {
       return foundEls;
     }
     el.children.filter(function(child) {
-      return typeof child === 'object';
+      return typeof child === 'object' && child !== null;
     }).forEach(function(child) {
       child.parent = el;
     });
