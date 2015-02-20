@@ -2,7 +2,7 @@
 
 var cssauron = require('cssauron');
 
-function isStsring(thing) {
+function isString(thing) {
   return typeof thing === 'string';
 }
 
