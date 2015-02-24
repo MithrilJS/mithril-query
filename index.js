@@ -60,7 +60,7 @@ function find(selector, el) {
       isString(el.children) ||
       !el.children ||
       // sometimes mithril spits out an array with only one undefined.
-      (isArray(el.children) && !el.children[0])
+      (isArray(el.children) && el.children.length === 1 && !el.children[0])
     ) {
       return foundEls;
     }
