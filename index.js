@@ -14,6 +14,10 @@ function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
 }
 
+function isModule(thing) {
+  return  typeof thing === 'object' && thing.controller && thing.view;
+}
+
 var language = cssauron({
   tag: 'tag',
   contents: function(node) {
@@ -50,6 +54,9 @@ function find(selector, el) {
   var els = isArray(el) ? el : [el];
   els = els.filter(function(el) { return el !== undefined && el !== null; });
   var foundEls = els.reduce(function(foundEls, el) {
+    if (isModule(el)) {
+      el = el.view(el.controller());
+    }
     if (matchesSelector(el)) {
       foundEls.push(el);
     }
@@ -92,6 +99,9 @@ function scan(render) {
   }
 
   function contains(value, el) {
+    if (isModule(el)) {
+      el = el.view(el.controller());
+    }
     if (!el) {
       return false;
     }
@@ -219,12 +229,11 @@ function scan(render) {
 function init(viewOrModuleOrRootEl, scope) {
   var api = {};
   var isViewFunction = typeof viewOrModuleOrRootEl === 'function';
-  var isModule = viewOrModuleOrRootEl.controller && viewOrModuleOrRootEl.view;
   if (isViewFunction) {
     api = scan(function() {
       return viewOrModuleOrRootEl(scope);
     });
-  } else if (isModule) {
+  } else if (isModule(viewOrModuleOrRootEl)) {
     scope = new viewOrModuleOrRootEl.controller(scope);
     api = scan(function() {
       return viewOrModuleOrRootEl.view(scope);

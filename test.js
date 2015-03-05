@@ -223,3 +223,26 @@ test('access root element', function(t) {
     t.end();
   });
 });
+
+test('components', function(t) {
+  var events = {};
+  var myComponent = {
+    controller: function(data) {
+      return {
+        foo: data || 'bar',
+        onunload: events.onunload
+      };
+    },
+    view: function(scope, data) {
+      return m('aside', [
+        data,
+        'hello',
+        scope.foo
+      ]);
+    }
+  };
+  var $out = mq(m('div', myComponent));
+  $out.should.have('aside');
+  $out.should.contain('bar');
+  t.end();
+});
