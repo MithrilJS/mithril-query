@@ -55,7 +55,8 @@ function find(selector, el) {
   els = els.filter(function(el) { return el !== undefined && el !== null; });
   var foundEls = els.reduce(function(foundEls, el) {
     if (isModule(el)) {
-      el = el.view(el.controller());
+      var scope = el.controller();
+      el = el.view(scope);
     }
     if (matchesSelector(el)) {
       foundEls.push(el);

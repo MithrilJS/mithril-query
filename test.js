@@ -244,5 +244,9 @@ test('components', function(t) {
   var $out = mq(m('div', myComponent));
   $out.should.have('aside');
   $out.should.contain('bar');
+
+  $out = mq(m('div', m.module(myComponent, 'huhu')));
+  $out.should.have('aside');
+  $out.should.contain('huhu');
   t.end();
 });
