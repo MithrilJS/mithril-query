@@ -225,7 +225,7 @@ test('access root element', function(t) {
 });
 
 test('components', function(t) {
-  var events = {};
+  var $out, events = {};
   var myComponent = {
     controller: function(data) {
       return {
@@ -241,12 +241,25 @@ test('components', function(t) {
       ]);
     }
   };
-  var $out = mq(m('div', myComponent));
-  $out.should.have('aside');
-  $out.should.contain('bar');
 
-  $out = mq(m('div', m.module(myComponent, 'huhu')));
-  $out.should.have('aside');
-  $out.should.contain('huhu');
-  t.end();
+  t.test('basic usage', function(t) {
+    $out = mq(m('div', myComponent));
+    $out.should.have('aside');
+    $out.should.contain('bar');
+    t.end();
+  });
+
+  t.test('use with m.module', function(t) {
+    $out = mq(m('div', m.module(myComponent, 'huhu')));
+    $out.should.have('aside');
+    $out.should.contain('huhu');
+    t.end();
+  });
+
+  t.test('test plain component with init args', function(t) {
+    $out = mq(myComponent, 'huhu');
+    $out.should.have('aside');
+    $out.should.contain('huhu');
+    t.end();
+  });
 });

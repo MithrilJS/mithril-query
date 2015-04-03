@@ -211,7 +211,7 @@ function scan(render) {
   };
   api.find = function(selector) {
     return find(selector, api.rootEl);
-  },
+  };
   api.setValue = setValue;
   api.focus = focus;
   api.click = click;
@@ -227,7 +227,10 @@ function scan(render) {
   return api;
 }
 
-function init(viewOrModuleOrRootEl, scope) {
+function init(viewOrModuleOrRootEl, scope, b, c, d, e, f, noWay) {
+  if (noWay) {
+    throw new Error('More than 6 args of a component? Seriously? Such bad style is not supported.');
+  }
   var api = {};
   var isViewFunction = typeof viewOrModuleOrRootEl === 'function';
   if (isViewFunction) {
@@ -235,9 +238,10 @@ function init(viewOrModuleOrRootEl, scope) {
       return viewOrModuleOrRootEl(scope);
     });
   } else if (isModule(viewOrModuleOrRootEl)) {
-    scope = new viewOrModuleOrRootEl.controller(scope);
+    var a = scope;
+    scope = new viewOrModuleOrRootEl.controller(a, b, c, d, e, f);
     api = scan(function() {
-      return viewOrModuleOrRootEl.view(scope);
+      return viewOrModuleOrRootEl.view(scope, a, b, c, d, e, f);
     });
   } else {
     // assume that first argument is rendered view
