@@ -262,4 +262,18 @@ test('components', function(t) {
     $out.should.contain('huhu');
     t.end();
   });
+
+  t.test('test onunload', function(t) {
+    events.onunload = t.end;
+    $out = mq(m('div', myComponent('huhu')));
+    $out.should.have('aside');
+    $out.onunload();
+  });
+
+  t.test('test onunload component only', function(t) {
+    events.onunload = t.end;
+    $out = mq(myComponent, 'huhu');
+    $out.should.have('aside');
+    $out.onunload();
+  });
 });

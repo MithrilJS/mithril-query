@@ -49,43 +49,45 @@ var language = cssauron({
   }
 });
 
-function find(selector, el) {
-  var matchesSelector = isString(selector) ? language(selector) : selector;
-  var els = isArray(el) ? el : [el];
-  els = els.filter(function(el) { return el !== undefined && el !== null; });
-  var foundEls = els.reduce(function(foundEls, el) {
-    if (isModule(el)) {
-      var scope = el.controller();
-      el = el.view(scope);
-    }
-    if (matchesSelector(el)) {
-      foundEls.push(el);
-    }
-    if (isArray(el)) {
-      return foundEls.concat(find(matchesSelector, el));
-    }
-    if (
-      isString(el.children) ||
-      !el.children ||
-      // sometimes mithril spits out an array with only one undefined.
-      (isArray(el.children) && !el.children[0])
-    ) {
-      return foundEls;
-    }
-    el.children.filter(function(child) {
-      return typeof child === 'object' && child !== null;
-    }).forEach(function(child) {
-      child.parent = el;
-    });
-    return foundEls.concat(find(matchesSelector, el.children));
-  }, []);
-  return foundEls;
-}
-
 function scan(render) {
   var api = {
-    rootEl: render()
+    rootEl: render(),
+    onunloaders: []
   };
+
+  function find(selector, el) {
+    var matchesSelector = isString(selector) ? language(selector) : selector;
+    var els = isArray(el) ? el : [el];
+    els = els.filter(function(el) { return el !== undefined && el !== null; });
+    var foundEls = els.reduce(function(foundEls, el) {
+      if (isModule(el)) {
+        var scope = el.controller();
+        api.onunloaders.push(scope.onunload);
+        el = el.view(scope);
+      }
+      if (matchesSelector(el)) {
+        foundEls.push(el);
+      }
+      if (isArray(el)) {
+        return foundEls.concat(find(matchesSelector, el));
+      }
+      if (
+        isString(el.children) ||
+        !el.children ||
+        // sometimes mithril spits out an array with only one undefined.
+        (isArray(el.children) && !el.children[0])
+      ) {
+        return foundEls;
+      }
+      el.children.filter(function(child) {
+        return typeof child === 'object' && child !== null;
+      }).forEach(function(child) {
+        child.parent = el;
+      });
+      return foundEls.concat(find(matchesSelector, el.children));
+    }, []);
+    return foundEls;
+  }
 
   function first(selector) {
     var el = find(selector, api.rootEl)[0];
@@ -101,7 +103,9 @@ function scan(render) {
 
   function contains(value, el) {
     if (isModule(el)) {
-      el = el.view(el.controller());
+      var scope = el.controller();
+      api.onunloaders.push(scope.onunload);
+      el = el.view(scope);
     }
     if (!el) {
       return false;
@@ -237,19 +241,29 @@ function init(viewOrModuleOrRootEl, scope, b, c, d, e, f, noWay) {
     api = scan(function() {
       return viewOrModuleOrRootEl(scope);
     });
+    if (scope) {
+      api.onunloaders.push(scope.onunload);
+    }
   } else if (isModule(viewOrModuleOrRootEl)) {
     var a = scope;
     scope = new viewOrModuleOrRootEl.controller(a, b, c, d, e, f);
     api = scan(function() {
       return viewOrModuleOrRootEl.view(scope, a, b, c, d, e, f);
     });
+    api.onunloaders.push(scope.onunload);
   } else {
     // assume that first argument is rendered view
     api = scan(function() {
       return viewOrModuleOrRootEl;
     });
   }
-  api.onunload = (scope && scope.onunload) ? scope.onunload : function() {};
+  api.onunload = function() {
+    api.onunloaders.forEach(function(onunloader) {
+      if (typeof onunloader === 'function') {
+        onunloader();
+      }
+    });
+  };
   return api;
 }
 
