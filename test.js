@@ -249,8 +249,8 @@ test('components', function(t) {
     t.end();
   });
 
-  t.test('use with m.module', function(t) {
-    $out = mq(m('div', m.module(myComponent, 'huhu')));
+  t.test('use with m.component', function(t) {
+    $out = mq(m('div', m.component(myComponent, 'huhu')));
     $out.should.have('aside');
     $out.should.contain('huhu');
     t.end();
@@ -265,7 +265,7 @@ test('components', function(t) {
 
   t.test('test onunload', function(t) {
     events.onunload = t.end;
-    $out = mq(m('div', myComponent('huhu')));
+    $out = mq(m('div', m.component(myComponent, 'huhu')));
     $out.should.have('aside');
     $out.onunload();
   });
