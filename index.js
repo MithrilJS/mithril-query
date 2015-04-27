@@ -19,6 +19,14 @@ function isModule(thing) {
   return  typeof thing === 'object' && thing.controller && thing.view;
 }
 
+function isFuction(thing) {
+  return typeof thing === 'function';
+}
+
+function call(thing) {
+  return thing();
+}
+
 var language = cssauron({
   tag: 'tag',
   contents: function(node) {
@@ -63,7 +71,9 @@ function scan(render) {
     var foundEls = els.reduce(function(foundEls, el) {
       if (isModule(el)) {
         var scope = el.controller();
-        api.onunloaders.push(scope.onunload);
+        if (scope) {
+          api.onunloaders.push(scope.onunload);
+        }
         el = el.view(scope);
       }
       if (matchesSelector(el)) {
@@ -104,8 +114,13 @@ function scan(render) {
 
   function contains(value, el) {
     if (isModule(el)) {
-      var scope = el.controller();
-      api.onunloaders.push(scope.onunload);
+      var scope;
+      if (el.controller) {
+        scope = el.controller();
+        if (scope.onunload) {
+          api.onunloaders.push(scope.onunload);
+        }
+      }
       el = el.view(scope);
     }
     if (!el) {
@@ -253,7 +268,9 @@ function init(viewOrModuleOrRootEl, scope, b, c, d, e, f, noWay) {
     api = scan(function() {
       return viewOrModuleOrRootEl.view(scope, a, b, c, d, e, f);
     });
-    api.onunloaders.push(scope.onunload);
+    if (scope) {
+      api.onunloaders.push(scope.onunload);
+    }
   } else {
     // assume that first argument is rendered view
     api = scan(function() {
@@ -261,11 +278,7 @@ function init(viewOrModuleOrRootEl, scope, b, c, d, e, f, noWay) {
     });
   }
   api.onunload = function() {
-    api.onunloaders.forEach(function(onunloader) {
-      if (typeof onunloader === 'function') {
-        onunloader();
-      }
-    });
+    api.onunloaders.filter(isFuction).map(call);
   };
   return api;
 }
