@@ -175,7 +175,7 @@ It also supports key events
   $out.keydown('div', 'enter');
   $out.keydown('div', 27);
 ```
-you can either use `keycode` or the keys name. Mapping is donw with
+you can either use `keycode` or the keys name. Mapping is done with
 [this lib](https://github.com/npmcomponent/yields-keycode). `keyup`, `keypress`
 are also supported.
 
