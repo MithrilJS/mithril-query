@@ -29,7 +29,8 @@
     "tape": "^3.0.3"
   },
   "dependencies": {
-    "cssauron": "^1.2.0"
+    "cssauron": "^1.2.0",
+    "yields-keycode": "^1.1.0"
   },
   "readmeFilename": "README.md",
   "gitHead": "b8930b06501d2083a31f674c5fd8d4f9ffe34eb4",

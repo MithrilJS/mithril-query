@@ -1,6 +1,7 @@
 'use strict';
 
 var cssauron = require('cssauron');
+var code = require('yields-keycode');
 
 function isString(thing) {
   return typeof thing === 'string';
@@ -182,22 +183,21 @@ function scan(render) {
     silent || api.redraw();
   }
 
-  function click(selector, event, silent) {
-    var attrs = first(selector).attrs;
-    attrs.onclick(event);
-    silent || api.redraw();
+  function trigger(eventName) {
+    return function (selector, event, silent) {
+      var attrs = first(selector).attrs;
+      attrs['on' + eventName](event);
+      silent || api.redraw();
+    };
   }
 
-  function focus(selector, event, silent) {
-    var attrs = first(selector).attrs;
-    attrs.onfocus(event);
-    silent || api.redraw();
-  }
-
-  function blur(selector, event, silent) {
-    var attrs = first(selector).attrs;
-    attrs.onblur(event);
-    silent || api.redraw();
+  function triggerKey(eventName) {
+    var fire = trigger(eventName);
+    return function keydown(selector, key, silent) {
+      fire(selector, {
+        keyCode: isString(key) ? code(key) : key
+      }, silent);
+    };
   }
 
   shouldHave.at = {
@@ -217,9 +217,12 @@ function scan(render) {
     return find(selector, api.rootEl);
   };
   api.setValue = setValue;
-  api.focus = focus;
-  api.click = click;
-  api.blur = blur;
+  api.focus = trigger('focus');
+  api.click = trigger('click');
+  api.blur = trigger('blur');
+  api.keydown = triggerKey('keydown');
+  api.keypress = triggerKey('keypress');
+  api.keyup = triggerKey('keyup');
   api.should = {
     not: {
       have: shouldNotHave,

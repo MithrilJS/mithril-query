@@ -167,6 +167,20 @@ Example:
 As you can see, you can prevent autoredraw by providing a `true` as last
 argument to `click` method. This also works for `blur`, `focus` and `setValue`.
 
+### keyboard events
+
+It also supports key events
+
+```javascript
+  $out.keydown('div', 'enter');
+  $out.keydown('div', 27);
+```
+you can either use `keycode` or the keys name. Mapping is donw with
+[this lib](https://github.com/npmcomponent/yields-keycode). `keyup`, `keypress`
+are also supported.
+
+### manual redraw
+
 You can also manually trigger redraw:
 
 ```javascript

@@ -3,6 +3,7 @@
 var test = require('tape').test;
 var m = require('mithril');
 var mq = require('./');
+var code = require('yields-keycode');
 
 function noop() {}
 
@@ -146,6 +147,32 @@ test('autorerender module', function(t) {
   $out.click('.visible');
   $out.should.have('.hidden');
   $out.click('.hidden', null, true);
+  $out.should.have('.hidden');
+  t.end();
+});
+
+test('trigger keyboard events', function(t) {
+  var module = {
+    controller: function() {
+      var scope = {
+        visible: true,
+        update: function(event) {
+          if (event.keyCode == 123) scope.visible = false;
+          if (event.keyCode == code('esc')) scope.visible = true;
+        }
+      };
+      return scope;
+    },
+    view: function(scope) {
+      return m(scope.visible ? '.visible' : '.hidden', {
+        onkeydown: scope.update
+      }, 'Test');
+    }
+  };
+  var $out = mq(module);
+  $out.keydown('div', 'esc');
+  $out.should.have('.visible');
+  $out.keydown('div', 123);
   $out.should.have('.hidden');
   t.end();
 });
