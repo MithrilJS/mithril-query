@@ -1,7 +1,21 @@
 'use strict';
 
+var m = require('mithril');
+var DOM = require('simple-dom');
+
+m.deps({
+  document: new DOM.Document(),
+  requestAnimationFrame: function(fn) {
+    return setTimeout(fn, 0);
+  }
+});
+
+var rootNode = new DOM.Node('div', 'div');
+
 var cssauron = require('cssauron');
 var code = require('yields-keycode');
+
+function noop(){}
 
 function isString(thing) {
   return typeof thing === 'string';
@@ -11,20 +25,65 @@ function isNumber(thing) {
   return typeof thing === 'number';
 }
 
-function isArray(thing) {
-  return Object.prototype.toString.call(thing) === '[object Array]';
-}
-
-function isModule(thing) {
+function isComponent(thing) {
   return  typeof thing === 'object' && thing.controller && thing.view;
 }
 
-function isFuction(thing) {
+function isFunction(thing) {
   return typeof thing === 'function';
 }
 
-function call(thing) {
-  return thing();
+function getAttr(type, fallback) {
+  return function(node) {
+    if (!node.attributes) {
+      return fallback;
+    }
+    var attribute = node.attributes.filter(function(attribute) {
+      return attribute.name === type;
+    })[0];
+    if (!attribute) {
+      return fallback;
+    }
+    return attribute.value;
+  };
+}
+
+function getChildNodes(node) {
+  var childNodes = [];
+  var child = node.firstChild;
+  while (child) {
+    childNodes.push(child);
+    child = child.nextSibling;
+  }
+  return childNodes;
+}
+
+function toVdomEl(node) {
+  var attrMap = {
+    classname: 'className'
+  };
+  if (node.nodeName === '#text') {
+    return node.nodeValue;
+  }
+  var vdomEl = {
+    tag: node.tagName.toLowerCase()
+  };
+  vdomEl.attrs = node.attributes.reduce(function(attrs, attribute) {
+    attrs[attrMap[attribute.name] || attribute.name] = attribute.value;
+    return attrs;
+  }, {});
+  Object.keys(node).reduce(function(vdomEl, key) {
+    if (isFunction(node[key])) {
+      vdomEl.attrs[key] = node[key];
+    }
+    return vdomEl;
+  }, vdomEl);
+  vdomEl.children = getChildNodes(node).map(function(node) {
+    var child = toVdomEl(node);
+    child.parent = vdomEl;
+    return child;
+  });
+  return vdomEl;
 }
 
 var language = cssauron({
@@ -48,9 +107,7 @@ var language = cssauron({
     return '';
   },
   parent: 'parent',
-  children: function(node) {
-    return node.children;
-  },
+  children: 'children',
   attr: function(node, attr) {
     if (node.attrs) {
       return node.attrs[attr];
@@ -58,45 +115,24 @@ var language = cssauron({
   }
 });
 
-function scan(render) {
-  var api = {
-    rootEl: render(),
-    onunloaders: []
+function scan(renderVdom) {
+  var api = {};
+  api.redraw = function() {
+    m.render(rootNode, renderVdom());
+    api.rootEl = toVdomEl(rootNode.firstChild);
   };
-
+  api.redraw();
   function find(selector, el) {
+    var foundEls = [];
     var matchesSelector = isString(selector) ? language(selector) : selector;
-    var els = isArray(el) ? el : [el];
-    els = els.filter(function(el) { return el !== undefined && el !== null; });
-    var foundEls = els.reduce(function(foundEls, el) {
-      if (isModule(el)) {
-        var scope = el.controller();
-        if (scope) {
-          api.onunloaders.push(scope.onunload);
-        }
-        el = el.view(scope);
-      }
-      if (matchesSelector(el)) {
-        foundEls.push(el);
-      }
-      if (isArray(el)) {
-        return foundEls.concat(find(matchesSelector, el));
-      }
-      if (
-        isString(el.children) ||
-        !el.children ||
-        // sometimes mithril spits out an array with only one undefined.
-        (isArray(el.children) && !el.children[0])
-      ) {
-        return foundEls;
-      }
-      el.children.filter(function(child) {
-        return typeof child === 'object' && child !== null;
-      }).forEach(function(child) {
-        child.parent = el;
+    if (matchesSelector(el)) {
+      foundEls.push(el);
+    }
+    if (el.children) {
+      el.children.map(function(child) {
+        foundEls = foundEls.concat(find(matchesSelector, child));
       });
-      return foundEls.concat(find(matchesSelector, el.children));
-    }, []);
+    }
     return foundEls;
   }
 
@@ -113,42 +149,12 @@ function scan(render) {
   }
 
   function contains(value, el) {
-    if (isModule(el)) {
-      var scope;
-      if (el.controller) {
-        scope = el.controller();
-        if (scope.onunload) {
-          api.onunloaders.push(scope.onunload);
-        }
-      }
-      el = el.view(scope);
+    if (isString(el) || isNumber(el)) {
+      return ('' + el).indexOf(value) >= 0;
     }
-    if (!el) {
-      return false;
-    }
-    if (isString(el)) {
-      return el.indexOf(value) >= 0;
-    }
-    if (isString(el.children)) {
-      return el.children.indexOf(value) >= 0;
-    }
-    if (isNumber(el)) {
-      return el === value;
-    }
-    if (isNumber(el.children)) {
-      return el.children === value;
-    }
-    if (isArray(el)) {
-      return el.some(function(child) {
-        return contains(value, child);
-      });
-    }
-    if (el.children && el.children.length) {
-      return el.children.some(function(child) {
-        return contains(value, child);
-      });
-    }
-    return false;
+    return (el.children || []).some(function(child) {
+      return contains(value, child);
+    });
   }
 
   function shouldHaveAtLeast(minCount, selector) {
@@ -187,22 +193,26 @@ function scan(render) {
   }
 
   function setValue(selector, string, silent) {
-    var attrs = first(selector).attrs;
+    var el = first(selector);
     var event = {
       currentTarget: {value: string},
       target: {value: string}
     };
-    attrs.oninput && attrs.oninput(event);
-    attrs.onchange && attrs.onchange(event);
-    attrs.onkeyup && attrs.onkeyup(event);
-    silent || api.redraw();
+    el.attrs.oninput && el.attrs.oninput(event);
+    el.attrs.onchange && el.attrs.onchange(event);
+    el.attrs.onkeyup && el.attrs.onkeyup(event);
+    if (!silent) {
+      api.redraw();
+    }
   }
 
   function trigger(eventName) {
     return function (selector, event, silent) {
-      var attrs = first(selector).attrs;
-      attrs['on' + eventName](event);
-      silent || api.redraw();
+      var el = first(selector);
+      el.attrs['on' + eventName](event || {});
+      if (!silent) {
+        api.redraw();
+      }
     };
   }
 
@@ -219,10 +229,6 @@ function scan(render) {
     least: shouldHaveAtLeast
   };
 
-  api.redraw = function() {
-    api.rootEl = render();
-    return api;
-  };
   api.first = first;
   api.has = has;
   api.contains = function(value) {
@@ -249,38 +255,39 @@ function scan(render) {
   return api;
 }
 
-function init(viewOrModuleOrRootEl, scope, b, c, d, e, f, noWay) {
+function init(viewOrComponentOrRootEl, scope, b, c, d, e, f, noWay) {
+  m.render(rootNode, m('div'));
   if (noWay) {
     throw new Error('More than 6 args of a component? Seriously? Such bad style is not supported.');
   }
   var api = {};
-  var isViewFunction = typeof viewOrModuleOrRootEl === 'function';
-  if (isViewFunction) {
+  var componentOnUnload = noop;
+  if (isFunction(viewOrComponentOrRootEl)) {
     api = scan(function() {
-      return viewOrModuleOrRootEl(scope);
+      return viewOrComponentOrRootEl(scope);
     });
-    if (scope) {
-      api.onunloaders.push(scope.onunload);
-    }
-  } else if (isModule(viewOrModuleOrRootEl)) {
+  } else if (isComponent(viewOrComponentOrRootEl)) {
     var a = scope;
-    scope = new viewOrModuleOrRootEl.controller(a, b, c, d, e, f);
+    scope = new viewOrComponentOrRootEl.controller(a, b, c, d, e, f);
     api = scan(function() {
-      return viewOrModuleOrRootEl.view(scope, a, b, c, d, e, f);
+      return viewOrComponentOrRootEl.view(scope, a, b, c, d, e, f);
     });
-    if (scope) {
-      api.onunloaders.push(scope.onunload);
-    }
   } else {
     // assume that first argument is rendered view
     api = scan(function() {
-      return viewOrModuleOrRootEl;
+      return viewOrComponentOrRootEl;
     });
   }
+  if (scope && isFunction(scope.onunload)) {
+    componentOnUnload = scope.onunload;
+  }
   api.onunload = function() {
-    api.onunloaders.filter(isFuction).map(call);
+    componentOnUnload();
+    m.render(rootNode, m('div'));
   };
   return api;
 }
+
+init.toVdomEl = toVdomEl;
 
 module.exports = init;

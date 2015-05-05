@@ -4,6 +4,7 @@ var test = require('tape').test;
 var m = require('mithril');
 var mq = require('./');
 var code = require('yields-keycode');
+var DOM = require('simple-dom');
 
 function noop() {}
 
@@ -30,24 +31,22 @@ var el = m('div', [tagEl, concatClassEl, classEl, innerString, idEl,
                    devilEl, idClassEl, arrayOfArrays, undefined, eventEl, numbah]);
 
 test('first', function(t) {
-  t.equal(mq(el).first('span'), tagEl, 'select by tag should work');
-  t.equal(mq(el).first('.one'), classEl, 'select by class should work');
-  t.equal(mq(el).first('div > .one'), classEl, 'select by child selector should work');
-  t.equal(mq(el).first('.one'), classEl, 'select by class should work');
-  t.equal(mq(el).first('.two.one'), classEl, 'select by class should work');
-  t.equal(mq(el).first('#two'), idEl, 'select by id should work');
-  t.equal(mq(el).first('div#two'), idEl, 'select by tag/id should work');
-  t.equal(mq(el).first('.three#three'), idClassEl, 'select by .class#id should work');
-  t.equal(mq(el).first(':contains(DEVIL)'), 'DEVIL', 'select by :content should work');
-  t.equal(mq(el).first(':contains(Inner String)'), innerString,
-                       'select by :content should work');
-  t.equal(mq(el).first('#arrayArray'), arrayOfArrays[0][0],
-                       'select of array in array defined el should work');
+  t.ok(mq(el).first('span'), 'select by tag should work');
+  t.ok(mq(el).first('.one'), 'select by class should work');
+  t.ok(mq(el).first('div > .one'), 'select by child selector should work');
+  t.ok(mq(el).first('.one'), 'select by class should work');
+  t.ok(mq(el).first('.two.one'), 'select by class should work');
+  t.ok(mq(el).first('#two'), 'select by id should work');
+  t.ok(mq(el).first('div#two'), 'select by tag/id should work');
+  t.ok(mq(el).first('.three#three'), 'select by .class#id should work');
+  t.ok(mq(el).first(':contains(DEVIL)'), 'select by :content should work');
+  t.ok(mq(el).first(':contains(Inner String)'), 'select by :content should work');
+  t.ok(mq(el).first('#arrayArray'), 'select of array in array defined el should work');
   t.end();
 });
 
 test('find', function(t) {
-  t.deepEqual(mq(el).find('span'), [tagEl], 'find by tag should work');
+  t.ok(mq(el).find('span'), 'find by tag should work');
   t.end();
 });
 
@@ -93,7 +92,7 @@ test('should style assertions', function(t) {
 
   t.doesNotThrow(function() {
     mq(el).should.have(7, 'div');
-  }, 'should not when true');
+  }, 'should throw not when true');
 
   t.throws(function() {
     mq(el).should.contain('XXXXX');
@@ -228,14 +227,16 @@ test('onunload', function(t) {
 test('null objects', function(t) {
   t.test('init with null elements', function(t) {
     function view() {
-      return [
+      return m('div', [
         null,
         m('input'),
         null
-      ];
+      ]);
     }
     var $out = mq(view());
-    t.doesNotThrow($out.should.have.bind($out.should.have, 'input'));
+    t.doesNotThrow(function() {
+      $out.should.have('input');
+    });
     t.end();
   });
 });
@@ -246,7 +247,11 @@ test('access root element', function(t) {
       return m('div', ['foo', 'bar']);
     }
     var $out = mq(view);
-    t.deepEqual($out.rootEl, view());
+    t.deepEqual($out.rootEl, {
+      attrs: {},
+      children: [ 'foo', 'bar' ],
+      tag: 'div'
+    }, 'should be accessible');
     t.end();
   });
 });
@@ -257,11 +262,17 @@ test('components', function(t) {
     controller: function(data) {
       return {
         foo: data || 'bar',
-        onunload: events.onunload
+        onunload: events.onunload,
+        firstRender: true
       };
     },
     view: function(scope, data) {
-      return m('aside', [
+      var tag = 'aside';
+      if (scope.firstRender) {
+        tag += '.firstRender';
+        scope.firstRender = false;
+      }
+      return m(tag, [
         data,
         'hello',
         scope.foo
@@ -291,16 +302,53 @@ test('components', function(t) {
   });
 
   t.test('test onunload', function(t) {
-    events.onunload = t.end;
+    events.onunload = function() { t.end(); };
     $out = mq(m('div', m.component(myComponent, 'huhu')));
     $out.should.have('aside');
     $out.onunload();
   });
 
+  t.test('state', function(t) {
+    events.onunload = noop;
+    $out = mq(m('div', m.component(myComponent, 'huhu')));
+    $out.should.have('aside.firstRender');
+    $out.redraw();
+    $out.should.not.have('aside.firstRender');
+    t.end();
+  });
+
+  t.test('state with multiple of same elements', function(t) {
+    events.onunload = noop;
+    $out = mq(m('div', [
+      myComponent,
+      myComponent
+    ]));
+    $out.should.have(2, 'aside.firstRender');
+    $out.redraw();
+    $out.should.not.have('aside.firstRender');
+    t.end();
+  });
+
   t.test('test onunload component only', function(t) {
-    events.onunload = t.end;
+    events.onunload = function() { t.end(); };
     $out = mq(myComponent, 'huhu');
     $out.should.have('aside');
     $out.onunload();
   });
+});
+
+test('dom to vdom', function(t) {
+  var testEl = m('span.foo', {
+    className: 'bar',
+    'data-foo': '123',
+    onclick: function() {t.end();}
+  }, ['hahha', m('span')]);
+  var root= new DOM.Node('div', 'div');
+  m.render(root, testEl);
+  var generatedVdom = mq.toVdomEl(root.firstChild);
+  t.deepEqual(testEl.attrs.className, generatedVdom.attrs.className);
+  t.deepEqual(testEl.attrs['data-foo'], generatedVdom.attrs['data-foo']);
+  t.deepEqual(testEl.tag, generatedVdom.tag);
+  t.deepEqual(testEl.tag, generatedVdom.tag);
+  generatedVdom.attrs.onclick({});
 });
