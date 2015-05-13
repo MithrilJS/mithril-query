@@ -62,17 +62,28 @@ var language = cssauron({
   }
 });
 
+function join(arrays) {
+  return arrays.reduce(function(result, array) {
+    return result.concat(array);
+  }, []);
+}
+
 function scan(render) {
   var api = {
     rootEl: render(),
     onunloaders: []
   };
 
-  function find(selector, el) {
-    var matchesSelector = isString(selector) ? language(selector) : selector;
-    var els = isArray(el) ? el : [el];
-    els = els.filter(identity);
-    var foundEls = els.reduce(function(foundEls, el) {
+  function find(selectorString, el) {
+    return select(language(selectorString))(el);
+  }
+
+  function select(matchesSelector) {
+    return function matches(el) {
+      if (isArray(el)) {
+        return join(el.filter(identity).map(matches));
+      }
+      var foundEls = [];
       if (isModule(el)) {
         var scope = el.controller();
         if (scope) {
@@ -83,18 +94,14 @@ function scan(render) {
       if (matchesSelector(el)) {
         foundEls.push(el);
       }
-      if (isArray(el)) {
-        return foundEls.concat(find(matchesSelector, el));
-      }
       if (!el.children || isString(el.children)) {
         return foundEls;
       }
       el.children.filter(identity).forEach(function(child) {
         child.parent = el;
       });
-      return foundEls.concat(find(matchesSelector, el.children));
-    }, []);
-    return foundEls;
+      return foundEls.concat(matches(el.children));
+    };
   }
 
   function first(selector) {
