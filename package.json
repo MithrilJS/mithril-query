@@ -4,7 +4,7 @@
   "description": "Query mithril virtual dom for testing purposes",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/tape/bin/tape test.js "
+    "test": "node_modules/mocha/bin/mocha test.js "
   },
   "repository": {
     "type": "git",
@@ -25,8 +25,8 @@
   },
   "homepage": "https://github.com/StephanHoyer/mithril-query",
   "devDependencies": {
-    "mithril": "git://github.com/lhorie/mithril.js.git#components",
-    "tape": "^3.0.3"
+    "mithril": "0.2.0",
+    "mocha": "^2.2.4"
   },
   "dependencies": {
     "cssauron": "^1.2.0",

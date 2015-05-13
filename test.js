@@ -1,267 +1,315 @@
 'use strict';
 
-var test = require('tape').test;
 var m = require('mithril');
 var mq = require('./');
-var code = require('yields-keycode');
+var keyCode = require('yields-keycode');
+var expect = require('expect.js');
 
 function noop() {}
 
-var events = {
-  onclick: noop,
-  onfocus: noop
-};
+describe('mithril query', function() {
+  describe('basic selection of things', function() {
+    var el, out, tagEl, concatClassEl, classEl, idEl, innerString;
+    var devilEl, idClassEl, arrayOfArrays, rawHtml, numbah, disabled;
 
-var tagEl = m('span');
-var concatClassEl = m('.onetwo');
-var classEl = m('.one.two');
-var idEl = m('#two');
-var innerString = 'Inner String';
-var devilEl = m('.three', 'DEVIL');
-var idClassEl = m('#three.three');
-var arrayOfArrays = [[m('#arrayArray')]];
-var numbah = 10;
-var eventEl = m('input#eventEl', {
-  onclick: function(evt) { events.onclick(evt); },
-  onfocus: function(evt) { events.onfocus(evt); },
-  oninput: function(evt) { events.oninput(evt); }
-});
-var el = m('div', [tagEl, concatClassEl, classEl, innerString, idEl,
-                   devilEl, idClassEl, arrayOfArrays, undefined, eventEl, numbah]);
+    beforeEach(function() {
+      tagEl = m('span');
+      concatClassEl = m('.onetwo');
+      classEl = m('.one.two');
+      idEl = m('#two');
+      innerString = 'Inner String';
+      devilEl = m('.three', 'DEVIL');
+      idClassEl = m('#three.three');
+      arrayOfArrays = m('#arrayArray');
+      disabled = m('[disabled]');
+      rawHtml = m.trust('<div class="trusted"></div>');
+      numbah = 10;
+      el = m('.root', [tagEl, concatClassEl, classEl, innerString, idEl,
+                         devilEl, idClassEl, [[arrayOfArrays]], undefined,
+                         numbah, rawHtml, disabled]);
+      out = mq(el);
+    });
+    it('should allow to select by selectors', function() {
+      expect(out.first('span')).to.eql(tagEl);
+      expect(out.first('.one')).to.eql(classEl);
+      expect(out.first('div > .one')).to.eql(classEl);
+      expect(out.first('.two.one')).to.eql(classEl);
+      expect(out.first('#two')).to.eql(idEl);
+      expect(out.first('div#two')).to.eql(idEl);
+      expect(out.first('.three#three')).to.eql(idClassEl);
+      expect(out.first(':contains(DEVIL)')).to.eql(devilEl);
+      expect(out.first('#arrayArray')).to.eql(arrayOfArrays);
+      expect(out.first(':contains(Inner String)').attrs.className).to.eql('root');
+      expect(out.first('[disabled]')).to.eql(disabled);
+    });
+  });
 
-test('first', function(t) {
-  t.equal(mq(el).first('span'), tagEl, 'select by tag should work');
-  t.equal(mq(el).first('.one'), classEl, 'select by class should work');
-  t.equal(mq(el).first('div > .one'), classEl, 'select by child selector should work');
-  t.equal(mq(el).first('.one'), classEl, 'select by class should work');
-  t.equal(mq(el).first('.two.one'), classEl, 'select by class should work');
-  t.equal(mq(el).first('#two'), idEl, 'select by id should work');
-  t.equal(mq(el).first('div#two'), idEl, 'select by tag/id should work');
-  t.equal(mq(el).first('.three#three'), idClassEl, 'select by .class#id should work');
-  t.equal(mq(el).first(':contains(DEVIL)'), 'DEVIL', 'select by :content should work');
-  t.equal(mq(el).first(':contains(Inner String)'), innerString,
-                       'select by :content should work');
-  t.equal(mq(el).first('#arrayArray'), arrayOfArrays[0][0],
-                       'select of array in array defined el should work');
-  t.end();
-});
-
-test('find', function(t) {
-  t.deepEqual(mq(el).find('span'), [tagEl], 'find by tag should work');
-  t.end();
-});
-
-test('events', function(t) {
-  t.plan(3);
-  events.onclick = function() {
-    t.ok(true, 'clickevent should be fired');
-  };
-  mq(el).click('#eventEl');
-  events.onfocus = function() {
-    t.ok(true, 'focusevent should be fired');
-  };
-  mq(el).focus('#eventEl');
-  events.oninput = function(evt) {
-    t.equal(evt.currentTarget.value, 'huhu', 'value should be set');
-  };
-  mq(el).setValue('#eventEl', 'huhu');
-});
-
-test('contains', function(t) {
-  t.ok(mq(el).contains('DEVIL'), 'contain should work');
-  t.ok(mq(el).contains('Inner String'), 'contain should work');
-  t.ok(mq(el).contains(numbah), 'contain should work for numbers');
-  t.end();
-});
-
-test('should style assertions', function(t) {
-  t.doesNotThrow(function() {
-    mq(el).should.have('span');
-  }, 'should not when true');
-
-  t.throws(function() {
-    mq(el).should.have('table');
-  }, 'should throw when no element matches');
-
-  t.doesNotThrow(function() {
-    mq(el).should.have('.one');
-  }, 'should not when true');
-
-  t.throws(function() {
-    mq(el).should.have(3, 'div');
-  }, 'should throw with wrong count');
-
-  t.doesNotThrow(function() {
-    mq(el).should.have(7, 'div');
-  }, 'should not when true');
-
-  t.throws(function() {
-    mq(el).should.contain('XXXXX');
-  }, 'should throw when not containing');
-
-  t.doesNotThrow(function() {
-    mq(el).should.not.have('table');
-  }, 'should not when true');
-
-  t.throws(function() {
-    mq(el).should.not.have('span');
-  }, 'should throw when any element matches');
-
-  t.doesNotThrow(function() {
-    mq(el).should.not.contain('XXXXXX');
-  }, 'should not when true');
-
-  t.throws(function() {
-    mq(el).should.not.contain('DEVIL');
-  }, 'should throw when containing');
-
-  t.doesNotThrow(function() {
-    mq(el).should.have.at.least(4, 'div');
-  }, 'should not when true');
-
-  t.throws(function() {
-    mq(el).should.have.at.least(8, 'div');
-  }, 'should throw when not enought elements');
-
-  t.end();
-});
-
-test('autorerender module', function(t) {
-  var module = {
-    controller: function() {
-      var scope = {
-        visible: true,
-        toggleMe: function() { scope.visible = !scope.visible; }
+  describe('events', function() {
+    var out, events, eventEl;
+    beforeEach(function() {
+      events = {
+        onclick: noop,
+        onfocus: noop
       };
-      return scope;
-    },
-    view: function(scope) {
-      return m(scope.visible ? '.visible' : '.hidden', {
-        onclick: scope.toggleMe
-      }, 'Test');
-    }
-  };
+      eventEl = m('input#eventEl', {
+        onclick: function(evt) { events.onclick(evt); },
+        onfocus: function(evt) { events.onfocus(evt); },
+        oninput: function(evt) { events.oninput(evt); }
+      });
+      out = mq(m('.root', eventEl));
+    });
 
-  var $out = mq(module);
-  $out.should.have('.visible');
-  $out.click('.visible');
-  $out.should.have('.hidden');
-  $out.click('.hidden', null, true);
-  $out.should.have('.hidden');
-  t.end();
+    it('should react on click events', function(done) {
+      events.onclick = function() {
+        done();
+      };
+      out.click('#eventEl');
+    });
+
+    it('should react on focus events', function(done) {
+      events.onfocus = function() {
+        done();
+      };
+      out.focus('#eventEl');
+    });
+
+    it('should react on input events', function(done) {
+      events.oninput = function(event) {
+        expect(event.target.value).to.be('huhu');
+        expect(event.currentTarget.value).to.be('huhu');
+        done();
+      };
+      out.setValue('#eventEl', 'huhu');
+    });
+  });
+
+  describe('contains', function() {
+    it('should allow to select by content', function() {
+      var out = mq(m('.containstest', ['Inner String', null, 123]));
+      expect(out.contains('Inner String')).to.be.ok();
+      expect(out.contains(123)).to.ok();
+    });
+  });
 });
 
-test('trigger keyboard events', function(t) {
-  var module = {
-    controller: function() {
-      var scope = {
-        visible: true,
-        update: function(event) {
-          if (event.keyCode == 123) scope.visible = false;
-          if (event.keyCode == code('esc')) scope.visible = true;
+describe('should style assertions', function() {
+  var out;
+
+  beforeEach(function() {
+    out = mq(m('.shouldtest', [
+      m('span'),
+      m('.one'),
+      m('.two', 'XXXXX'),
+    ]));
+  });
+
+  it('should not throw when as expected', function() {
+    expect(out.should.have).withArgs('span').to.not.throwError();
+    expect(out.should.have).withArgs('.one').to.not.throwError();
+  });
+
+  it('should throw when no element matches', function() {
+    expect(out.should.have).withArgs('table').to.throwError();
+  });
+
+  it('should throw when count is not exact', function() {
+    expect(out.should.have).withArgs(100, 'div').to.throwError();
+  });
+
+  it('should throw when count is exact', function() {
+    expect(out.should.have).withArgs(3, 'div').to.not.throwError();
+  });
+
+  it('should throw when not containing sting', function() {
+    expect(out.should.contain).withArgs('XXXXX').to.not.throwError();
+  });
+
+  it('should not throw when expecting unpresence of unpresent', function() {
+    expect(out.should.not.have).withArgs('table').to.not.throwError();
+  });
+
+  it('should throw when expecting unpresence of present', function() {
+    expect(out.should.not.have).withArgs('span').to.throwError();
+  });
+
+  it('should throw when containing unexpected sting', function() {
+    expect(out.should.not.contain).withArgs('XXXXX').to.throwError();
+  });
+
+  it('should throw when containing unexpected sting', function() {
+    expect(out.should.not.contain).withArgs('FOOOO').to.not.throwError();
+  });
+  it('should not throw when there are enought elements', function() {
+    expect(out.should.have.at.least).withArgs(3, 'div').to.not.throwError();
+  });
+  it('should throw when not enought elements', function() {
+    expect(out.should.have.at.least).withArgs(40000, 'div').to.throwError();
+  });
+});
+
+describe('null objects', function() {
+  it('should ignore null objects', function() {
+    function view() {
+      return m('div', [
+        null,
+        m('input'),
+        null
+      ]);
+    }
+    mq(view).should.have('input');
+    expect(mq(view()).should.have).withArgs('input').to.not.throwError();
+  });
+});
+
+describe('autorender', function() {
+  describe('autorerender module', function() {
+    var out;
+
+    beforeEach(function() {
+      var module = {
+        controller: function() {
+          var scope = {
+            visible: true,
+            toggleMe: function() { scope.visible = !scope.visible; }
+          };
+          return scope;
+        },
+        view: function(scope) {
+          return m(scope.visible ? '.visible' : '.hidden', {
+            onclick: scope.toggleMe
+          }, 'Test');
         }
       };
-      return scope;
-    },
-    view: function(scope) {
-      return m(scope.visible ? '.visible' : '.hidden', {
-        onkeydown: scope.update
-      }, 'Test');
+      out = mq(module);
+    });
+
+    it('should autorender', function() {
+      out.should.have('.visible');
+      out.click('.visible');
+      out.should.have('.hidden');
+      out.click('.hidden', null, true);
+      out.should.have('.hidden');
+    });
+
+    it('should update boolean attributes', function() {
+      out = mq(function() {
+        return m('select', [
+          m('option', {value: 'foo', selected: true})
+        ]);
+      });
+      out.should.have('option[selected]');
+    });
+  });
+
+  describe('autorerender function', function() {
+    it('should autorender function', function() {
+      function view(scope) {
+        return m(scope.visible ? '.visible' : '.hidden', {
+          onclick: function() { scope.visible = !scope.visible; }
+        }, 'Test');
+      }
+
+      var scope = { visible: true };
+      var out = mq(view, scope);
+      out.should.have('.visible');
+      out.click('.visible');
+      out.should.have('.hidden');
+      out.click('.hidden', null, true);
+      out.should.have('.hidden');
+    });
+  });
+});
+
+describe('access root element', function() {
+  it('should be possible to access root element', function() {
+    function view() {
+      return m('div', ['foo', 'bar']);
     }
-  };
-  var $out = mq(module);
-  $out.keydown('div', 'esc');
-  $out.should.have('.visible');
-  $out.keydown('div', 123);
-  $out.should.have('.hidden');
-  t.end();
+    var out = mq(view);
+    expect(out.rootEl).to.eql({
+      attrs: {},
+      children: [ 'foo', 'bar' ],
+      tag: 'div'
+    });
+  });
 });
 
-test('autorerender function', function(t) {
-  function view(scope) {
-    return m(scope.visible ? '.visible' : '.hidden', {
-      onclick: function() { scope.visible = !scope.visible; }
-    }, 'Test');
-  }
-
-  var scope = { visible: true };
-  var $out = mq(view, scope);
-  $out.should.have('.visible');
-  $out.click('.visible');
-  $out.should.have('.hidden');
-  $out.click('.hidden', null, true);
-  $out.should.have('.hidden');
-  t.end();
+describe('trigger keyboard events', function() {
+  it('should be possible to describe keyboard events', function() {
+    var module = {
+      controller: function() {
+        var scope = {
+          visible: true,
+          update: function(event) {
+            if (event.keyCode == 123) scope.visible = false;
+            if (event.keyCode == keyCode('esc')) scope.visible = true;
+          }
+        };
+        return scope;
+      },
+      view: function(scope) {
+        return m(scope.visible ? '.visible' : '.hidden', {
+          onkeydown: scope.update
+        }, 'describe');
+      }
+    };
+    var out = mq(module);
+    out.keydown('div', 'esc');
+    out.should.have('.visible');
+    out.keydown('div', 123);
+    out.should.have('.hidden');
+  });
 });
 
-test('onunload', function(t) {
-  t.test('init with view, scope', function(t) {
+describe('onunload', function() {
+  it('should be possible when init with view, scope', function(done) {
     function view() {}
     var scope = {
-      onunload: t.end
+      onunload: done
     };
-    var $out = mq(view, scope);
-    $out.onunload();
+    var out = mq(view, scope);
+    out.onunload();
   });
-  t.test('init with rendered view', function(t) {
+  it('should be possible when init with rendered view', function() {
     function view() {
       return 'foo';
     }
-    var $out = mq(view());
-    t.doesNotThrow($out.onunload);
-    t.end();
+    var out = mq(view());
+    expect(out.onunload).to.not.throwError;
   });
-  t.test('init with module', function(t) {
+  it('should be possible when init with module', function(done) {
     var module = {
       view: function() {},
       controller: function() {
         return {
-          onunload: t.end
+          onunload: done
         };
       }
     };
-    var $out = mq(module);
-    $out.onunload();
+    var out = mq(module);
+    out.onunload();
   });
 });
 
-test('null objects', function(t) {
-  t.test('init with null elements', function(t) {
-    function view() {
-      return [
-        null,
-        m('input'),
-        null
-      ];
-    }
-    var $out = mq(view());
-    t.doesNotThrow($out.should.have.bind($out.should.have, 'input'));
-    t.end();
-  });
-});
-
-test('access root element', function(t) {
-  t.test('call root() to access root element', function(t) {
-    function view() {
-      return m('div', ['foo', 'bar']);
-    }
-    var $out = mq(view);
-    t.deepEqual($out.rootEl, view());
-    t.end();
-  });
-});
-
-test('components', function(t) {
-  var $out, events = {};
+describe('components', function() {
+  var out, events = {onunload: noop};
   var myComponent = {
     controller: function(data) {
       return {
         foo: data || 'bar',
-        onunload: events.onunload
+        onunload: function() {
+          events.onunload();
+        },
+        firstRender: true
       };
     },
     view: function(scope, data) {
-      return m('aside', [
+      var tag = 'aside';
+      if (scope.firstRender) {
+        tag += '.firstRender';
+        scope.firstRender = false;
+      }
+      return m(tag, [
         data,
         'hello',
         scope.foo
@@ -269,38 +317,84 @@ test('components', function(t) {
     }
   };
 
-  t.test('basic usage', function(t) {
-    $out = mq(m('div', myComponent));
-    $out.should.have('aside');
-    $out.should.contain('bar');
-    t.end();
+  describe('basic usage', function() {
+    it('should work with components', function() {
+      out = mq(m('div', {
+        controller: noop,
+        view: function() {
+          return m('strong', 'bar');
+        }
+      }));
+      out.should.have('strong');
+      out.should.contain('bar');
+    });
   });
 
-  t.test('use with m.component', function(t) {
-    $out = mq(m('div', m.component(myComponent, 'huhu')));
-    $out.should.have('aside');
-    $out.should.contain('huhu');
-    t.end();
+  describe('use with m.component', function() {
+    it('should work with presetted components', function() {
+      out = mq(m('span', m.component({
+        controller: noop,
+        view: function(scope, data) {
+          return m('aside', data);
+        }
+      }), 'huhu'));
+      out.should.have('aside');
+      out.should.contain('huhu');
+    });
   });
 
-  t.test('test plain component with init args', function(t) {
-    $out = mq(myComponent, 'huhu');
-    $out.should.have('aside');
-    $out.should.contain('huhu');
-    t.end();
+  describe('describe plain component with init args', function() {
+    it('should work with directly injected components', function() {
+      out = mq(myComponent, 'huhu');
+      out.should.have('aside');
+      out.should.contain('huhu');
+    });
   });
 
-  t.test('test onunload', function(t) {
-    events.onunload = t.end;
-    $out = mq(m('div', m.component(myComponent, 'huhu')));
-    $out.should.have('aside');
-    $out.onunload();
+  describe('describe onunload', function() {
+    it('should call onunload', function(done) {
+      events.onunload = done;
+      out = mq(m('div', m.component(myComponent, 'huhu')));
+      out.should.have('aside');
+      out.onunload();
+    });
   });
 
-  t.test('test onunload component only', function(t) {
-    events.onunload = t.end;
-    $out = mq(myComponent, 'huhu');
-    $out.should.have('aside');
-    $out.onunload();
+  describe.skip('state', function() {
+    it('should preserve components state', function() {
+      events.onunload = noop;
+      out = mq(m('div', m.component(myComponent, 'haha')));
+      out.should.have('aside.firstRender');
+      out.redraw();
+      out.should.not.have('aside.firstRender');
+    });
+  });
+
+  describe.skip('state with multiple of same elements', function() {
+    it('should preserve components state for every used component', function() {
+      events.onunload = noop;
+      out = mq(m('div', [
+        myComponent,
+        myComponent
+      ]));
+      out.should.have(2, 'aside.firstRender');
+      out.redraw();
+      out.should.not.have('aside.firstRender');
+    });
+  });
+
+  describe('describe onunload component only', function() {
+    it('should call onunload', function(done) {
+      out = mq({
+        controller: function() {
+          return { onunload: done };
+        },
+        view: function() {
+          return m('aside', 'bar');
+        }
+      });
+      out.should.have('aside');
+      out.onunload();
+    });
   });
 });

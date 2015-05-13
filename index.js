@@ -3,6 +3,10 @@
 var cssauron = require('cssauron');
 var code = require('yields-keycode');
 
+function identity(thing) {
+  return thing;
+}
+
 function isString(thing) {
   return typeof thing === 'string';
 }
@@ -16,7 +20,7 @@ function isArray(thing) {
 }
 
 function isModule(thing) {
-  return  typeof thing === 'object' && thing.controller && thing.view;
+  return  thing && typeof thing === 'object' && thing.controller && thing.view;
 }
 
 function isFuction(thing) {
@@ -30,10 +34,10 @@ function call(thing) {
 var language = cssauron({
   tag: 'tag',
   contents: function(node) {
-    if (isString(node)) {
-      return node;
+    if (isString(node.children)) {
+      return node.children;
     }
-    return isString(node.children) ? node.children : '';
+    return isArray(node.children) ? node.children.filter(isString).concat('') : '';
   },
   id: function(node) {
     if (node.attrs) {
@@ -49,7 +53,7 @@ var language = cssauron({
   },
   parent: 'parent',
   children: function(node) {
-    return node.children;
+    return node.children.filter(identity);
   },
   attr: function(node, attr) {
     if (node.attrs) {
@@ -67,7 +71,7 @@ function scan(render) {
   function find(selector, el) {
     var matchesSelector = isString(selector) ? language(selector) : selector;
     var els = isArray(el) ? el : [el];
-    els = els.filter(function(el) { return el !== undefined && el !== null; });
+    els = els.filter(identity);
     var foundEls = els.reduce(function(foundEls, el) {
       if (isModule(el)) {
         var scope = el.controller();
@@ -82,17 +86,10 @@ function scan(render) {
       if (isArray(el)) {
         return foundEls.concat(find(matchesSelector, el));
       }
-      if (
-        isString(el.children) ||
-        !el.children ||
-        // sometimes mithril spits out an array with only one undefined.
-        (isArray(el.children) && !el.children[0])
-      ) {
+      if (!el.children || isString(el.children)) {
         return foundEls;
       }
-      el.children.filter(function(child) {
-        return typeof child === 'object' && child !== null;
-      }).forEach(function(child) {
+      el.children.filter(identity).forEach(function(child) {
         child.parent = el;
       });
       return foundEls.concat(find(matchesSelector, el.children));
@@ -117,7 +114,7 @@ function scan(render) {
       var scope;
       if (el.controller) {
         scope = el.controller();
-        if (scope.onunload) {
+        if (scope && scope.onunload) {
           api.onunloaders.push(scope.onunload);
         }
       }
