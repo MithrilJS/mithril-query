@@ -360,7 +360,7 @@ describe('components', function() {
     });
   });
 
-  describe.skip('state', function() {
+  describe('state', function() {
     it('should preserve components state', function() {
       events.onunload = noop;
       out = mq(m('div', m.component(myComponent, 'haha')));
@@ -370,7 +370,7 @@ describe('components', function() {
     });
   });
 
-  describe.skip('state with multiple of same elements', function() {
+  describe('state with multiple of same elements', function() {
     it('should preserve components state for every used component', function() {
       events.onunload = noop;
       out = mq(m('div', [

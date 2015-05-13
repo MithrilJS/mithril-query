@@ -3,6 +3,8 @@
 var cssauron = require('cssauron');
 var code = require('yields-keycode');
 
+var PD = '//';
+
 function identity(thing) {
   return thing;
 }
@@ -74,22 +76,27 @@ function scan(render) {
     onunloaders: []
   };
 
+  var scopes = {};
+
   function find(selectorString, el) {
     return select(language(selectorString))(el);
   }
 
   function select(matchesSelector) {
-    return function matches(el) {
+    return function matches(el, treePath) {
+      treePath = treePath || '';
       if (isArray(el)) {
-        return join(el.filter(identity).map(matches));
+        return join(el.filter(identity).map(function(childEl, index) {
+          return matches(childEl, treePath + PD + (childEl.key || index));
+        }));
       }
       var foundEls = [];
       if (isModule(el)) {
-        var scope = el.controller();
-        if (scope) {
-          api.onunloaders.push(scope.onunload);
+        scopes[treePath] = scopes[treePath] || el.controller();
+        if (scopes[treePath]) {
+          api.onunloaders.push(scopes[treePath].onunload);
         }
-        el = el.view(scope);
+        el = el.view(scopes[treePath]);
       }
       if (matchesSelector(el)) {
         foundEls.push(el);
@@ -100,7 +107,7 @@ function scan(render) {
       el.children.filter(identity).forEach(function(child) {
         child.parent = el;
       });
-      return foundEls.concat(matches(el.children));
+      return foundEls.concat(matches(el.children, treePath));
     };
   }
 
