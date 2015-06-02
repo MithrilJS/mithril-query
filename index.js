@@ -107,10 +107,13 @@ function scan(render) {
       if (!el.children || isString(el.children)) {
         return foundEls;
       }
-      el.children.filter(identity).forEach(function(child) {
-        child.parent = el;
+      var children = el.children.filter(identity).map(function(child) {
+        if (typeof(child) === 'object') {
+          child.parent = el;
+        }
+        return child
       });
-      return foundEls.concat(matches(el.children, treePath));
+      return foundEls.concat(matches(children, treePath));
     };
   }
 
