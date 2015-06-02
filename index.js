@@ -243,9 +243,9 @@ function scan(render) {
     return find(selector, api.rootEl);
   };
   api.setValue = setValue;
-  api.focus = trigger('focus');
-  api.click = trigger('click');
-  api.blur = trigger('blur');
+  ['focus', 'click', 'blur', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'].map(function(eventName) {
+    api[eventName] = trigger(eventName);
+  });
   api.keydown = triggerKey('keydown');
   api.keypress = triggerKey('keypress');
   api.keyup = triggerKey('keyup');
