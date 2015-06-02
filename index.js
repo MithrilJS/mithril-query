@@ -91,6 +91,9 @@ function scan(render) {
         }));
       }
       var foundEls = [];
+      if (!el) {
+        return foundEls;
+      }
       if (isModule(el)) {
         scopes[treePath] = scopes[treePath] || el.controller();
         if (scopes[treePath]) {
