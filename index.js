@@ -108,7 +108,10 @@ function scan(render) {
         return foundEls;
       }
       el.children.filter(identity).forEach(function(child) {
-        child.parent = el;
+        // ignore text nodes
+        if (typeof child !== 'string') {
+          child.parent = el;
+        }
       });
       return foundEls.concat(matches(el.children, treePath));
     };
