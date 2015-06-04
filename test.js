@@ -89,6 +89,14 @@ describe('mithril query', function() {
       expect(out.contains('Inner String')).to.be.ok();
       expect(out.contains(123)).to.ok();
     });
+
+    describe('trusted content', function() {
+      it('should allow to select by content', function() {
+        var out = mq(m('.containstest', [m.trust('<p>Trusted String</p>'), 'Inner String']));
+        expect(out.contains('Inner String')).to.be.ok();
+        expect(out.contains('Trusted String')).to.be.ok();
+      });
+    });
   });
 });
 

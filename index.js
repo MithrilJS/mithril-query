@@ -29,6 +29,10 @@ function isFuction(thing) {
   return typeof thing === 'function';
 }
 
+function isTrusted(thing) {
+  return thing.$trusted;
+}
+
 function call(thing) {
   return thing();
 }
@@ -143,7 +147,7 @@ function scan(render) {
     if (!el) {
       return false;
     }
-    if (isString(el)) {
+    if (isString(el) || isTrusted(el)) {
       return el.indexOf(value) >= 0;
     }
     if (isString(el.children)) {
