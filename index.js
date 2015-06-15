@@ -112,8 +112,8 @@ function scan(render) {
         return foundEls;
       }
       el.children.filter(identity).forEach(function(child) {
-        // ignore text nodes
-        if (typeof child !== 'string') {
+        // ignore text and number nodes
+        if ((typeof child !== 'string') && (typeof child !== 'number')) {
           child.parent = el;
         }
       });
