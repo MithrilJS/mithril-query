@@ -11,6 +11,7 @@ describe('mithril query', function() {
   describe('basic selection of things', function() {
     var el, out, tagEl, concatClassEl, classEl, idEl, innerString;
     var devilEl, idClassEl, arrayOfArrays, rawHtml, numbah, disabled;
+    var msxOutput;
 
     beforeEach(function() {
       tagEl = m('span');
@@ -23,10 +24,11 @@ describe('mithril query', function() {
       arrayOfArrays = m('#arrayArray');
       disabled = m('[disabled]');
       rawHtml = m.trust('<div class="trusted"></div>');
+      msxOutput = { tag: 'div', attrs: { class: 'msx' }, children: [] };
       numbah = 10;
       el = m('.root', [tagEl, concatClassEl, classEl, innerString, idEl,
                          devilEl, idClassEl, [[arrayOfArrays]], undefined,
-                         numbah, rawHtml, disabled]);
+                         numbah, rawHtml, disabled, msxOutput]);
       out = mq(el);
     });
     it('should allow to select by selectors', function() {
@@ -41,6 +43,7 @@ describe('mithril query', function() {
       expect(out.first('#arrayArray')).to.eql(arrayOfArrays);
       expect(out.first(':contains(Inner String)').attrs.className).to.eql('root');
       expect(out.first('[disabled]')).to.eql(disabled);
+      expect(out.first('.msx')).to.eql(msxOutput);
     });
   });
 

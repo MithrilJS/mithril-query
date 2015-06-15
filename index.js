@@ -53,7 +53,7 @@ var language = cssauron({
   },
   class: function(node) {
     if (node.attrs) {
-      return node.attrs.className;
+      return node.attrs.className || node.attrs['class'];
     }
     return '';
   },
