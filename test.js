@@ -57,7 +57,8 @@ describe('mithril query', function() {
       eventEl = m('input#eventEl', {
         onclick: function(evt) { events.onclick(evt); },
         onfocus: function(evt) { events.onfocus(evt); },
-        oninput: function(evt) { events.oninput(evt); }
+        oninput: function(evt) { events.oninput(evt); },
+        onthing: function(evt) { events.onthing(evt); }
       });
       out = mq(m('.root', eventEl));
     });
@@ -83,6 +84,14 @@ describe('mithril query', function() {
         done();
       };
       out.setValue('#eventEl', 'huhu');
+    });
+
+    it('should allow sending custom events', function(done) {
+      events.onthing = function(event) {
+        expect(event).to.be('pop');
+        done();
+      };
+      out.trigger('#eventEl', 'thing', 'pop');
     });
   });
 

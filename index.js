@@ -259,6 +259,9 @@ function scan(render) {
   api.keydown = triggerKey('keydown');
   api.keypress = triggerKey('keypress');
   api.keyup = triggerKey('keyup');
+  api.trigger = function(selector, eventName, event, silent) {
+    trigger(eventName)(selector, event, silent);
+  };
   api.should = {
     not: {
       have: shouldNotHave,
