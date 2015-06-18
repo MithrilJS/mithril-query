@@ -53,7 +53,7 @@ var language = cssauron({
   },
   class: function(node) {
     if (node.attrs) {
-      return node.attrs.className;
+      return node.attrs.className || node.attrs['class'];
     }
     return '';
   },
@@ -112,8 +112,8 @@ function scan(render) {
         return foundEls;
       }
       el.children.filter(identity).forEach(function(child) {
-        // ignore text nodes
-        if (typeof child !== 'string') {
+        // ignore text and number nodes
+        if ((typeof child !== 'string') && (typeof child !== 'number')) {
           child.parent = el;
         }
       });
@@ -259,6 +259,9 @@ function scan(render) {
   api.keydown = triggerKey('keydown');
   api.keypress = triggerKey('keypress');
   api.keyup = triggerKey('keyup');
+  api.trigger = function(selector, eventName, event, silent) {
+    trigger(eventName)(selector, event, silent);
+  };
   api.should = {
     not: {
       have: shouldNotHave,

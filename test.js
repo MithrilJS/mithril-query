@@ -11,6 +11,7 @@ describe('mithril query', function() {
   describe('basic selection of things', function() {
     var el, out, tagEl, concatClassEl, classEl, idEl, innerString;
     var devilEl, idClassEl, arrayOfArrays, rawHtml, numbah, disabled;
+    var msxOutput;
 
     beforeEach(function() {
       tagEl = m('span');
@@ -23,10 +24,11 @@ describe('mithril query', function() {
       arrayOfArrays = m('#arrayArray');
       disabled = m('[disabled]');
       rawHtml = m.trust('<div class="trusted"></div>');
+      msxOutput = { tag: 'div', attrs: { class: 'msx' }, children: [] };
       numbah = 10;
       el = m('.root', [tagEl, concatClassEl, classEl, innerString, idEl,
                          devilEl, idClassEl, [[arrayOfArrays]], undefined,
-                         numbah, rawHtml, disabled]);
+                         numbah, rawHtml, disabled, msxOutput]);
       out = mq(el);
     });
     it('should allow to select by selectors', function() {
@@ -41,6 +43,7 @@ describe('mithril query', function() {
       expect(out.first('#arrayArray')).to.eql(arrayOfArrays);
       expect(out.first(':contains(Inner String)').attrs.className).to.eql('root');
       expect(out.first('[disabled]')).to.eql(disabled);
+      expect(out.first('.msx')).to.eql(msxOutput);
     });
   });
 
@@ -54,7 +57,8 @@ describe('mithril query', function() {
       eventEl = m('input#eventEl', {
         onclick: function(evt) { events.onclick(evt); },
         onfocus: function(evt) { events.onfocus(evt); },
-        oninput: function(evt) { events.oninput(evt); }
+        oninput: function(evt) { events.oninput(evt); },
+        onthing: function(evt) { events.onthing(evt); }
       });
       out = mq(m('.root', eventEl));
     });
@@ -80,6 +84,14 @@ describe('mithril query', function() {
         done();
       };
       out.setValue('#eventEl', 'huhu');
+    });
+
+    it('should allow sending custom events', function(done) {
+      events.onthing = function(event) {
+        expect(event).to.be('pop');
+        done();
+      };
+      out.trigger('#eventEl', 'thing', 'pop');
     });
   });
 
