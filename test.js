@@ -5,6 +5,30 @@ var mq = require('./');
 var keyCode = require('yields-keycode');
 var expect = require('expect');
 
+var filedata = require('fs').readFileSync('./mithril-mock.js','utf8');
+var mockWindow = eval(filedata);
+
+// TODO: Does this actually reset everything?
+function windowInit() {
+  mockWindow.document.location = { hostname: 'localhost' };
+  global.window = mockWindow;
+  global.document = mockWindow.document;
+  document.body = document.createElement('body');
+  m.deps(mockWindow);
+}
+
+windowInit();
+
+function ajaxStub(mockResponse) {
+  var xhr = window.XMLHttpRequest.$instances.pop();
+  // Note: if mockResponse is empty then Mithril fills the response with the request instead,
+  // which can be useful to test for correct headers, HTTP methods, etc.
+  if(mockResponse) {
+    xhr.responseText = JSON.stringify(mockResponse);
+  }
+  xhr.onreadystatechange();
+}
+
 function noop() {}
 
 describe('mithril query', function() {
@@ -44,6 +68,53 @@ describe('mithril query', function() {
       expect(out.first(':contains(Inner String)').attrs.className).toEqual('root');
       expect(out.first('[disabled]')).toEqual(disabled);
       expect(out.first('.msx')).toEqual(msxOutput);
+    });
+  });
+
+  describe('mithril with a mocked DOM', function() {
+    beforeEach(function() {
+      function ajax() {
+        return m.request({method: 'GET', url: '/endpoint'}).then(function(response){
+          return response.message + ' and the URL param is ' + m.route.param('id');
+        });
+      }
+
+      var testModule = {
+        controller: function() {
+          return {
+            foo: m.route.param('id') === 'ajax' ? ajax() : noop
+          };
+        },
+        view: function(controller) {
+          return m('ul', [
+            m('li', controller.foo())
+          ]);
+        }
+      };
+
+      m.route(document.body, '/', {
+        '/': {},
+        '/page/:id': testModule
+      });
+    });
+
+    afterEach(function(){
+      windowInit();
+    });
+
+    it('should render the DOM and find elements', function() {
+      m.route('/page/normal');
+      window.requestAnimationFrame.$resolve();
+      var out = mq(document.body);
+      out.should.have('ul li');
+    });
+
+    it('should render the DOM with some stubbed AJAX', function() {
+      m.route('/page/ajax');
+      ajaxStub({message: 'Stubbed response text'});
+      window.requestAnimationFrame.$resolve();
+      var out = mq(document.body);
+      out.should.contain('Stubbed response text and the URL param is ajax');
     });
   });
 
