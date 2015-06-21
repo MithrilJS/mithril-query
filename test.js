@@ -3,7 +3,7 @@
 var m = require('mithril');
 var mq = require('./');
 var keyCode = require('yields-keycode');
-var expect = require('expect.js');
+var expect = require('expect');
 
 function noop() {}
 
@@ -32,18 +32,18 @@ describe('mithril query', function() {
       out = mq(el);
     });
     it('should allow to select by selectors', function() {
-      expect(out.first('span')).to.eql(tagEl);
-      expect(out.first('.one')).to.eql(classEl);
-      expect(out.first('div > .one')).to.eql(classEl);
-      expect(out.first('.two.one')).to.eql(classEl);
-      expect(out.first('#two')).to.eql(idEl);
-      expect(out.first('div#two')).to.eql(idEl);
-      expect(out.first('.three#three')).to.eql(idClassEl);
-      expect(out.first(':contains(DEVIL)')).to.eql(devilEl);
-      expect(out.first('#arrayArray')).to.eql(arrayOfArrays);
-      expect(out.first(':contains(Inner String)').attrs.className).to.eql('root');
-      expect(out.first('[disabled]')).to.eql(disabled);
-      expect(out.first('.msx')).to.eql(msxOutput);
+      expect(out.first('span')).toEqual(tagEl);
+      expect(out.first('.one')).toEqual(classEl);
+      expect(out.first('div > .one')).toEqual(classEl);
+      expect(out.first('.two.one')).toEqual(classEl);
+      expect(out.first('#two')).toEqual(idEl);
+      expect(out.first('div#two')).toEqual(idEl);
+      expect(out.first('.three#three')).toEqual(idClassEl);
+      expect(out.first(':contains(DEVIL)')).toEqual(devilEl);
+      expect(out.first('#arrayArray')).toEqual(arrayOfArrays);
+      expect(out.first(':contains(Inner String)').attrs.className).toEqual('root');
+      expect(out.first('[disabled]')).toEqual(disabled);
+      expect(out.first('.msx')).toEqual(msxOutput);
     });
   });
 
@@ -79,8 +79,8 @@ describe('mithril query', function() {
 
     it('should react on input events', function(done) {
       events.oninput = function(event) {
-        expect(event.target.value).to.be('huhu');
-        expect(event.currentTarget.value).to.be('huhu');
+        expect(event.target.value).toBe('huhu');
+        expect(event.currentTarget.value).toBe('huhu');
         done();
       };
       out.setValue('#eventEl', 'huhu');
@@ -88,7 +88,7 @@ describe('mithril query', function() {
 
     it('should allow sending custom events', function(done) {
       events.onthing = function(event) {
-        expect(event).to.be('pop');
+        expect(event).toBe('pop');
         done();
       };
       out.trigger('#eventEl', 'thing', 'pop');
@@ -98,15 +98,15 @@ describe('mithril query', function() {
   describe('contains', function() {
     it('should allow to select by content', function() {
       var out = mq(m('.containstest', ['Inner String', null, 123]));
-      expect(out.contains('Inner String')).to.be.ok();
-      expect(out.contains(123)).to.ok();
+      expect(out.contains('Inner String')).toBe(true);
+      expect(out.contains(123)).toBe(true);
     });
 
     describe('trusted content', function() {
       it('should allow to select by content', function() {
         var out = mq(m('.containstest', [m.trust('<p>Trusted String</p>'), 'Inner String']));
-        expect(out.contains('Inner String')).to.be.ok();
-        expect(out.contains('Trusted String')).to.be.ok();
+        expect(out.contains('Inner String')).toBe(true);
+        expect(out.contains('Trusted String')).toBe(true);
       });
     });
   });
@@ -124,46 +124,70 @@ describe('should style assertions', function() {
   });
 
   it('should not throw when as expected', function() {
-    expect(out.should.have).withArgs('span').to.not.throwError();
-    expect(out.should.have).withArgs('.one').to.not.throwError();
+    expect(function(){
+      out.should.have('span');
+    }).toNotThrow();
+    expect(function(){
+      out.should.have('.one');
+    }).toNotThrow();
   });
 
   it('should throw when no element matches', function() {
-    expect(out.should.have).withArgs('table').to.throwError();
+    expect(function(){
+      out.should.have('table');
+    }).toThrow();
   });
 
   it('should throw when count is not exact', function() {
-    expect(out.should.have).withArgs(100, 'div').to.throwError();
+    expect(function(){
+      out.should.have(100, 'div');
+    }).toThrow();
   });
 
   it('should throw when count is exact', function() {
-    expect(out.should.have).withArgs(3, 'div').to.not.throwError();
+    expect(function(){
+      out.should.have(3, 'div');
+    }).toNotThrow();
   });
 
   it('should throw when not containing sting', function() {
-    expect(out.should.contain).withArgs('XXXXX').to.not.throwError();
+    expect(function(){
+      out.should.contain('XXXXX');
+    }).toNotThrow();
   });
 
   it('should not throw when expecting unpresence of unpresent', function() {
-    expect(out.should.not.have).withArgs('table').to.not.throwError();
+    expect(function(){
+      out.should.not.have('table');
+    }).toNotThrow();
   });
 
   it('should throw when expecting unpresence of present', function() {
-    expect(out.should.not.have).withArgs('span').to.throwError();
+    expect(function(){
+      out.should.not.have('span');
+    }).toThrow();
   });
 
   it('should throw when containing unexpected sting', function() {
-    expect(out.should.not.contain).withArgs('XXXXX').to.throwError();
+    expect(function(){
+      out.should.not.contain('XXXXX');
+    }).toThrow();
   });
 
   it('should throw when containing unexpected sting', function() {
-    expect(out.should.not.contain).withArgs('FOOOO').to.not.throwError();
+    expect(function(){
+      out.should.not.contain('FOOOO');
+    }).toNotThrow();
   });
   it('should not throw when there are enought elements', function() {
-    expect(out.should.have.at.least).withArgs(3, 'div').to.not.throwError();
+    expect(function(){
+      out.should.have.at.least(3, 'div');
+    }).toNotThrow();
   });
   it('should throw when not enought elements', function() {
-    expect(out.should.have.at.least).withArgs(40000, 'div').to.throwError();
+    expect(function(){
+      out.should.have.at.least(40000, 'div');
+    }).toThrow();
   });
 });
 
@@ -177,7 +201,9 @@ describe('null objects', function() {
       ]);
     }
     mq(view).should.have('input');
-    expect(mq(view()).should.have).withArgs('input').to.not.throwError();
+    expect(function(){
+      mq(view()).should.have('input');
+    }).toNotThrow();
   });
 });
 
@@ -246,7 +272,7 @@ describe('access root element', function() {
       return m('div', ['foo', 'bar']);
     }
     var out = mq(view);
-    expect(out.rootEl).to.eql({
+    expect(out.rootEl).toEqual({
       attrs: {},
       children: [ 'foo', 'bar' ],
       tag: 'div'
@@ -295,7 +321,7 @@ describe('onunload', function() {
       return 'foo';
     }
     var out = mq(view());
-    expect(out.onunload).to.not.throwError;
+    expect(out.onunload).toNotThrow;
   });
   it('should be possible when init with module', function(done) {
     var module = {
