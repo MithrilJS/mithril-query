@@ -39,6 +39,7 @@ mock.window = (function() {
 	window.document.childNodes = []
 	window.document.createElement = function(tag) {
 		return {
+			attributes: [],
 			style: {},
 			childNodes: [],
 			nodeType: 1,
@@ -64,6 +65,10 @@ mock.window = (function() {
 				}
 			},
 			setAttribute: function(name, value) {
+				this.attributes.push({
+					name: name,
+					value: value
+				})
 				this[name] = value.toString()
 			},
 			setAttributeNS: function(namespace, name, value) {
