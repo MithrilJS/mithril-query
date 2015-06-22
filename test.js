@@ -1,6 +1,5 @@
 'use strict';
 
-
 var m = require('mithril');
 var mq = require('./');
 var keyCode = require('yields-keycode');
@@ -49,52 +48,46 @@ describe('mithril query', function() {
     });
   });
 
-  // describe('mithril with a mocked DOM', function() {
-  //   beforeEach(function() {
-  //     function ajax() {
-  //       return m.request({method: 'GET', url: '/endpoint'}).then(function(response){
-  //         return response.message + ' and the URL param is ' + m.route.param('id');
-  //       });
-  //     }
-  //
-  //     var testModule = {
-  //       controller: function() {
-  //         return {
-  //           foo: m.route.param('id') === 'ajax' ? ajax() : noop
-  //         };
-  //       },
-  //       view: function(controller) {
-  //         return m('ul', [
-  //           m('li', controller.foo())
-  //         ]);
-  //       }
-  //     };
-  //
-  //     m.route(document.body, '/', {
-  //       '/': {},
-  //       '/page/:id': testModule
-  //     });
-  //   });
-  //
-  //   afterEach(function(){
-  //     windowInit();
-  //   });
-  //
-  //   it('should render the DOM and find elements', function() {
-  //     m.route('/page/normal');
-  //     window.requestAnimationFrame.$resolve();
-  //     var out = mq(document.body);
-  //     out.should.have('ul li');
-  //   });
-  //
-  //   it('should render the DOM with some stubbed AJAX', function() {
-  //     m.route('/page/ajax');
-  //     ajaxStub({message: 'Stubbed response text'});
-  //     window.requestAnimationFrame.$resolve();
-  //     var out = mq(document.body);
-  //     out.should.contain('Stubbed response text and the URL param is ajax');
-  //   });
-  // });
+  describe('mithril with a mocked DOM', function() {
+    beforeEach(function() {
+      function ajax() {
+        return m.request({method: 'GET', url: '/endpoint'}).then(function(response){
+          return response.message + ' and the URL param is ' + m.route.param('id');
+        });
+      }
+
+      var testModule = {
+        controller: function() {
+          return {
+            foo: m.route.param('id') === 'ajax' ? ajax() : noop
+          };
+        },
+        view: function(controller) {
+          return m('ul', [
+            m('li', controller.foo())
+          ]);
+        }
+      };
+
+      m.route(document.body, '/', {
+        '/': {},
+        '/page/:id': testModule
+      });
+    });
+
+    it('should render the DOM and find elements', function() {
+      m.route('/page/normal');
+      var out = mq(document.body);
+      out.should.have('ul li');
+    });
+
+    it('should render the DOM with some stubbed AJAX', function() {
+      m.route('/page/ajax');
+      var out = mq(document.body);
+      out.ajaxStub({message: 'Stubbed response text'});
+      out.should.contain('Stubbed response text and the URL param is ajax');
+    });
+  });
 
   describe('events', function() {
     var out, events, eventEl;
@@ -283,7 +276,6 @@ describe('autorender', function() {
       out.click('.visible');
       out.should.have('.hidden');
       out.click('.hidden', null, true);
-      console.log(document.body.childNodes);
       out.should.have('.hidden');
     });
 
@@ -322,7 +314,7 @@ describe('access root element', function() {
       return m('div', ['foo', 'bar']);
     }
     var out = mq(view);
-    // TODO: out has to use the native DOM syntax now
+    // TODO: rootEl is now legacy, it will not recieve updates from autorender
     expect(out.rootEl).toEqual({
       attrs: {},
       children: [ 'foo', 'bar' ],
@@ -362,7 +354,8 @@ describe('onunload', function() {
   it('should be possible when init with view, scope', function(done) {
     function view() {}
     var scope = {
-      onunload: done
+      // TODO: syntax change: `done` to `function() { done(); }`
+      onunload: function() { done(); }
     };
     var out = mq(view, scope);
     out.onunload();
@@ -379,7 +372,8 @@ describe('onunload', function() {
       view: function() {},
       controller: function() {
         return {
-          onunload: done
+          // TODO: syntax change: `done` to `function() { done(); }`
+          onunload: function() { done(); }
         };
       }
     };
@@ -484,7 +478,8 @@ describe('components', function() {
     it('should call onunload', function(done) {
       out = mq({
         controller: function() {
-          return { onunload: done };
+          // TODO: syntax change: `done` to `function() { done(); }`
+          return { onunload: function() { done(); } };
         },
         view: function() {
           return m('aside', 'bar');

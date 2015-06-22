@@ -29,10 +29,6 @@ function isModule(thing) {
   return  thing && typeof thing === 'object' && thing.controller && thing.view;
 }
 
-function isFunction(thing) {
-  return typeof thing === 'function';
-}
-
 function isTrusted(thing) {
   return thing.$trusted;
 }
@@ -41,43 +37,59 @@ function isNativeDOM(el){
   return el.hasOwnProperty('nodeName') && el.hasOwnProperty('insertAdjacentHTML');
 }
 
-function isVdom(el){
-  return el.hasOwnProperty('tag');
+function windowStep(){
+  window.requestAnimationFrame.$resolve();
 }
 
-function call(thing) {
-  return thing();
-}
-
-// TODO: Does this actually reset everything?
 function windowInit() {
   mockWindow.document.location = { hostname: 'localhost' };
   global.window = mockWindow;
   global.document = mockWindow.document;
   document.body = document.createElement('body');
   m.deps(mockWindow);
-  window.requestAnimationFrame.$resolve();
+  windowStep();
 }
 
 function toVdomEl(node) {
+  if(typeof node === 'undefined') { return; }
+
   var attrMap = {
     classname: 'className'
   };
   if (node.nodeValue) {
     return node.nodeValue;
   }
-  var vdomEl = {
-    tag: node.nodeName.toLowerCase()
-  };
-  vdomEl.attrs = node.attributes.reduce(function(attrs, attribute) {
-    attrs[attrMap[attribute.name] || attribute.name] = attribute.value;
-    return attrs;
-  }, {});
+  var vdomEl = {};
+  if(node.nodeName){
+    vdomEl.tag = node.nodeName.toLowerCase();
+  }
+  if(node.attributes){
+    vdomEl.attrs = node.attributes.reduce(function(attrs, attribute) {
+      attrs[attrMap[attribute.name] || attribute.name] = attribute.value;
+      return attrs;
+    }, {});
+  }
   vdomEl.children = [];
-  if(node.childNodes && node.childNodes[0] && node.childNodes[0].nodeValue){
-    vdomEl.children.push(node.childNodes[0].nodeValue);
-  } else {
-    vdomEl.children.nodes = node.childNodes;
+  vdomEl.children.nodes = [];
+  if(node.childNodes){
+    node.childNodes.filter(function(child){
+      // By default mithril always has an empty `node: []` property for each child. This is
+      // removed if any text/number items get added. Eg; you never see this;
+      // ['text', nodes: []]
+      // But you *do* see this;
+      // [nodes: []]
+      if(child.nodeValue){
+        if(vdomEl.children.nodes && vdomEl.children.nodes.length === 0){
+          delete vdomEl.children.nodes;
+        }
+        vdomEl.children.push(child.nodeValue);
+      } else {
+        if(typeof vdomEl.children.nodes === 'undefined'){
+          vdomEl.children.nodes = [];
+        }
+        vdomEl.children.nodes.push(toVdomEl(child));
+      }
+    });
   }
   return vdomEl;
 }
@@ -112,10 +124,7 @@ var language = cssauron({
     }
   },
   id: function(node) {
-    if (node.id) {
-      return node.id;
-    }
-    return '';
+    return node.id;
   },
   class: function(node) {
     if (node.className){
@@ -147,24 +156,39 @@ function join(arrays) {
 
 function scan(render) {
   var calledWithNativeDOM = isNativeDOM(render);
-  var dom;
-  if(calledWithNativeDOM){
-    dom = render;
-  } else {
-    if(isVdom(render)) {
-      m.render(document.body, render);
+  var api = {};
+
+  function draw(render, rerender){
+    var dom;
+
+    if(calledWithNativeDOM){
+      // When `render` has already been rendered into native DOM syntax. Eg. from a call to
+      // `m.route('/page')` or `m.mount(document.body, module)`.
+      dom = render;
     } else {
-      m.mount(document.body, render);
+      var renderable = render();
+      if(isModule(renderable)) {
+        if(rerender){
+          // If you just call `m.component()` again then the state gets reset
+          m.redraw(true);
+        } else {
+          // When `render` has a mithril module syntax
+          m.mount(document.body, renderable);
+        }
+      } else {
+        // When `render` is already the result of some `m('div'...)` calls
+        // Needs to be a function, so it can be redrawn just be calling `redraw()` again
+        m.render(document.body, render());
+      }
+      dom = document.body;
     }
-    dom = document.body;
+    api.rootElement = dom;
+    // For backwards compatibility.
+    // TODO: Doesn't receive the results of autorendering.
+    api.rootEl = toVdomEl(dom.childNodes[0]);
   }
 
-  var api = {
-    rootEl: dom,
-    onunloaders: []
-  };
-
-  var scopes = {};
+  draw(render);
 
   function find(selectorString, el, returnAsNativeDOM) {
     return select(language(selectorString))(el).map(function(el){
@@ -189,16 +213,6 @@ function scan(render) {
       if (!el) {
         return foundEls;
       }
-
-      // TODO: Is this still needed?
-      if (isModule(el)) {
-        scopes[treePath] = scopes[treePath] || el.controller();
-        if (scopes[treePath]) {
-          api.onunloaders.push(scopes[treePath].onunload);
-        }
-        el = el.view(scopes[treePath]);
-      }
-
       if (matchesSelector(el)) {
         foundEls.push(el);
       }
@@ -216,7 +230,7 @@ function scan(render) {
   }
 
   function first(selector, returnAsNativeDOM) {
-    var el = find(selector, api.rootEl, returnAsNativeDOM)[0];
+    var el = find(selector, api.rootElement, returnAsNativeDOM)[0];
     if (!el) {
       throw new Error('No element matches ' + selector);
     }
@@ -224,22 +238,10 @@ function scan(render) {
   }
 
   function has(selector) {
-    return find(selector, api.rootEl).length > 0;
+    return find(selector, api.rootElement).length > 0;
   }
 
   function contains(value, el) {
-    // TODO: this is never going to be passed a vDOM and therefore will never be passed a
-    // mithril module, so how can onumloaders be added?
-    if (isModule(el)) {
-      var scope;
-      if (el.controller) {
-        scope = el.controller();
-        if (scope && scope.onunload) {
-          api.onunloaders.push(scope.onunload);
-        }
-      }
-      el = el.view(scope);
-    }
     if (!el) {
       return false;
     }
@@ -272,7 +274,7 @@ function scan(render) {
   }
 
   function shouldHaveAtLeast(minCount, selector) {
-    var actualCount = find(selector, api.rootEl).length;
+    var actualCount = find(selector, api.rootElement).length;
     if (actualCount < minCount) {
       throw new Error('Wrong count of elements that matches "' + selector +
             '"\n  expected: >=' + minCount + '\n  actual: ' + actualCount);
@@ -283,7 +285,7 @@ function scan(render) {
     if (!selector) {
       return shouldHaveAtLeast(1, expectedCount);
     }
-    var actualCount = find(selector, api.rootEl).length;
+    var actualCount = find(selector, api.rootElement).length;
     if (actualCount !== expectedCount) {
       throw new Error('Wrong count of elements that matches "' + selector +
             '"\n  expected: ' + expectedCount + '\n  actual: ' + actualCount);
@@ -295,13 +297,13 @@ function scan(render) {
   }
 
   function shouldContain(string) {
-    if (!contains(string, api.rootEl)) {
+    if (!contains(string, api.rootElement)) {
       throw new Error('Expected "' + string + '" not found!');
     }
   }
 
   function shouldNotContain(string) {
-    if (contains(string, api.rootEl)) {
+    if (contains(string, api.rootElement)) {
       throw new Error('Unexpected "' + string + '" found!');
     }
   }
@@ -345,7 +347,11 @@ function scan(render) {
   };
 
   api.redraw = function(){
-    m.redraw(true);
+    if(calledWithNativeDOM){
+      m.redraw(true);
+    } else {
+      draw(render, true);
+    }
   };
 
   api.ajaxStub = function(mockResponse) {
@@ -361,10 +367,10 @@ function scan(render) {
   api.first = first;
   api.has = has;
   api.contains = function(value) {
-    return contains(value, api.rootEl);
+    return contains(value, api.rootElement);
   };
   api.find = function(selector) {
-    return find(selector, api.rootEl);
+    return find(selector, api.rootElement);
   };
   api.setValue = setValue;
   ['focus', 'click', 'blur', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'].map(function(eventName) {
@@ -391,31 +397,37 @@ function init(viewOrModuleOrRootEl, scope, b, c, d, e, f, noWay) {
   // Reset the mock DOM
   windowInit();
 
-  // If we're dealing with an already rendered native DOM tree
-  if(isNativeDOM(viewOrModuleOrRootEl)){
-    return scan(viewOrModuleOrRootEl);
-  }
+  if(isNativeDOM(viewOrModuleOrRootEl)){ return scan(viewOrModuleOrRootEl); }
 
   if (noWay) {
     throw new Error('More than 6 args of a component? Seriously? Such bad style is not supported.');
   }
   var api = {};
+  var vdom = function(){ return viewOrModuleOrRootEl; };
   var isViewFunction = typeof viewOrModuleOrRootEl === 'function';
   if (isViewFunction) {
-    api = scan({
-      // TODO: add in scope, a, b, etc...
-      controller: function(){ return scope; },
-      view: viewOrModuleOrRootEl
-    });
-  } else {
-    // TODO: add in scope, a, b, etc...
-    api = scan(viewOrModuleOrRootEl);
+    vdom = function(){
+      return {
+        // TODO: add in a, b, etc...
+        controller: function(){ return scope; },
+        view: viewOrModuleOrRootEl
+      };
+    };
+  } else if (isModule(viewOrModuleOrRootEl) && scope) {
+    // Assume this is a component
+    vdom = function(){
+      // TODO: add in a, b, etc...
+      return m.component(viewOrModuleOrRootEl, scope);
+    };
   }
+  api = scan(vdom);
   api.onunload = function() {
     // Recommended method for triggering all onunload() callbacks
     m.mount(document.body, null);
   };
   return api;
 }
+
+windowInit();
 
 module.exports = init;
