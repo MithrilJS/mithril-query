@@ -4,7 +4,10 @@ var cssauron = require('cssauron');
 var code = require('yields-keycode');
 var m = require('mithril');
 
-var filedata = require('fs').readFileSync('./mithril-mock.js','utf8');
+// TODO; Use `mocks.js` from the official mithri repo, if we can get it included
+var path = require('path');
+var file = path.join(__dirname, 'mithril-mock.js');
+var filedata = require('fs').readFileSync(file,'utf8');
 var mockWindow = eval(filedata);
 
 var PD = '//';
