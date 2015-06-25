@@ -10,7 +10,7 @@ function identity(thing) {
 }
 
 function isString(thing) {
-  return typeof thing === 'string';
+  return Object.prototype.toString.call(thing) === '[object String]';
 }
 
 function isNumber(thing) {
