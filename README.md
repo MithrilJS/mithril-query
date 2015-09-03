@@ -102,6 +102,7 @@ test('simple module', function(t) {
     $output.should.have('span'); //asserts to have at least one span element
     $output.should.have(4,'.even'); //asserts to have four elements with class 'even'
     $output.should.have.at.least(4,'li'); //asserts to have at least four li-elements
+    $output.should.have(['.one', '.two', '.three']); // asserts to have at least one element from each selector
     $output.should.not.have('#main'); //asserts to not have an element with id 'main'
     $output.should.contain('hi'); //asserts to contain the string 'hi'
     $output.should.not.contain('bye'); //asserts to not contain the string 'bye'
