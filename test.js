@@ -24,7 +24,8 @@ describe('mithril query', function() {
       arrayOfArrays = m('#arrayArray');
       disabled = m('[disabled]');
       rawHtml = m.trust('<div class="trusted"></div>');
-      msxOutput = { tag: 'div', attrs: { class: 'msx' }, children: [] };
+      // TODO: I had to change class: to className: to get the msx test to pass. Is that right?
+      msxOutput = { tag: 'div', attrs: { className: 'msx' }, children: [] };
       numbah = 10;
       el = m('.root', [tagEl, concatClassEl, classEl, innerString, idEl,
                          devilEl, idClassEl, [[arrayOfArrays]], undefined,
@@ -44,6 +45,47 @@ describe('mithril query', function() {
       expect(out.first(':contains(Inner String)').attrs.className).toEqual('root');
       expect(out.first('[disabled]')).toEqual(disabled);
       expect(out.first('.msx')).toEqual(msxOutput);
+    });
+  });
+
+  describe('mithril with a mocked DOM', function() {
+    beforeEach(function() {
+      function ajax() {
+        return m.request({method: 'GET', url: '/endpoint'}).then(function(response){
+          return response.message + ' and the URL param is ' + m.route.param('id');
+        });
+      }
+
+      var testModule = {
+        controller: function() {
+          return {
+            foo: m.route.param('id') === 'ajax' ? ajax() : noop
+          };
+        },
+        view: function(controller) {
+          return m('ul', [
+            m('li', controller.foo())
+          ]);
+        }
+      };
+
+      m.route(document.body, '/', {
+        '/': {},
+        '/page/:id': testModule
+      });
+    });
+
+    it('should render the DOM and find elements', function() {
+      m.route('/page/normal');
+      var out = mq(document.body);
+      out.should.have('ul li');
+    });
+
+    it('should render the DOM with some stubbed AJAX', function() {
+      m.route('/page/ajax');
+      var out = mq(document.body);
+      out.ajaxStub({message: 'Stubbed response text'});
+      out.should.contain('Stubbed response text and the URL param is ajax');
     });
   });
 
@@ -287,6 +329,7 @@ describe('access root element', function() {
       return m('div', ['foo', 'bar']);
     }
     var out = mq(view);
+    // TODO: rootEl is now legacy, it will not recieve updates from autorender
     expect(out.rootEl).toEqual({
       attrs: {},
       children: [ 'foo', 'bar' ],
@@ -326,7 +369,8 @@ describe('onunload', function() {
   it('should be possible when init with view, scope', function(done) {
     function view() {}
     var scope = {
-      onunload: done
+      // TODO: syntax change: `done` to `function() { done(); }`
+      onunload: function() { done(); }
     };
     var out = mq(view, scope);
     out.onunload();
@@ -336,14 +380,15 @@ describe('onunload', function() {
       return 'foo';
     }
     var out = mq(view());
-    expect(out.onunload).toNotThrow;
+    expect(out.onunload).toNotThrow();
   });
   it('should be possible when init with module', function(done) {
     var module = {
       view: function() {},
       controller: function() {
         return {
-          onunload: done
+          // TODO: syntax change: `done` to `function() { done(); }`
+          onunload: function() { done(); }
         };
       }
     };
@@ -448,7 +493,8 @@ describe('components', function() {
     it('should call onunload', function(done) {
       out = mq({
         controller: function() {
-          return { onunload: done };
+          // TODO: syntax change: `done` to `function() { done(); }`
+          return { onunload: function() { done(); } };
         },
         view: function() {
           return m('aside', 'bar');
@@ -456,6 +502,15 @@ describe('components', function() {
       });
       out.should.have('aside');
       out.onunload();
+    });
+  });
+
+  describe('querying 2 coexisting instances of mq()', function() {
+    it('should query seperate instances of mq()', function() {
+      var one = mq(m('input'));
+      var two = mq(m('button'));
+      one.should.have('input');
+      two.should.have('button');
     });
   });
 });
