@@ -37,7 +37,7 @@ function isTrusted(thing) {
 }
 
 function isNativeDOM(el){
-  return el.hasOwnProperty('nodeName') && el.hasOwnProperty('insertAdjacentHTML');
+  return el.hasOwnProperty('appendChild') && el.hasOwnProperty('removeChild');
 }
 
 function windowStep(){
@@ -329,6 +329,7 @@ function scan(render) {
     return function (selector, event, silent) {
       if(typeof event === 'undefined' || event === null){
         event = {};
+        event.preventDefault = function(){};
       }
       var node = first(selector, true);
       node['on' + eventName](event);
@@ -365,6 +366,7 @@ function scan(render) {
       xhr.responseText = JSON.stringify(mockResponse);
     }
     xhr.onreadystatechange();
+    windowStep();
   };
 
   api.first = first;
@@ -376,7 +378,18 @@ function scan(render) {
     return find(selector, api.rootElement);
   };
   api.setValue = setValue;
-  ['focus', 'click', 'blur', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'].map(function(eventName) {
+  [
+    'focus',
+    'click',
+    'blur',
+    'mousedown',
+    'mouseup',
+    'mouseover',
+    'mouseout',
+    'mouseenter',
+    'mouseleave',
+    'submit'
+  ].map(function(eventName) {
     api[eventName] = trigger(eventName);
   });
   api.keydown = triggerKey('keydown');
