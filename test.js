@@ -489,4 +489,13 @@ describe('components', function() {
       out.onunload();
     });
   });
+
+  describe('querying 2 coexisting instances of mq()', function() {
+    it('should query seperate instances of mq()', function() {
+      var one = mq(m('input'));
+      var two = mq(m('button'));
+      one.should.have('input');
+      two.should.have('button');
+    });
+  });
 });
