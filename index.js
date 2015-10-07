@@ -17,7 +17,7 @@ function identity(thing) {
 }
 
 function isString(thing) {
-  return typeof thing === 'string';
+  return Object.prototype.toString.call(thing) === '[object String]';
 }
 
 function isNumber(thing) {
@@ -286,13 +286,21 @@ function scan(render) {
 
   function shouldHave(expectedCount, selector) {
     if (!selector) {
-      return shouldHaveAtLeast(1, expectedCount);
+      return isArray(expectedCount) ?
+        shouldHaveCollection(expectedCount) :
+        shouldHaveAtLeast(1, expectedCount);
     }
     var actualCount = find(selector, api.rootElement).length;
     if (actualCount !== expectedCount) {
       throw new Error('Wrong count of elements that matches "' + selector +
             '"\n  expected: ' + expectedCount + '\n  actual: ' + actualCount);
     }
+  }
+
+  function shouldHaveCollection(selectors) {
+    selectors.forEach(function (selector) {
+      shouldHaveAtLeast(1, selector);
+    });
   }
 
   function shouldNotHave(selector) {

@@ -186,7 +186,7 @@ describe('should style assertions', function() {
     }).toThrow();
   });
 
-  it('should throw when count is exact', function() {
+  it('should not throw when count is exact', function() {
     expect(function(){
       out.should.have(3, 'div');
     }).toNotThrow();
@@ -221,14 +221,29 @@ describe('should style assertions', function() {
       out.should.not.contain('FOOOO');
     }).toNotThrow();
   });
-  it('should not throw when there are enought elements', function() {
+  it('should not throw when there are enough elements', function() {
     expect(function(){
       out.should.have.at.least(3, 'div');
     }).toNotThrow();
   });
-  it('should throw when not enought elements', function() {
+  it('should throw when not enough elements', function() {
     expect(function(){
       out.should.have.at.least(40000, 'div');
+    }).toThrow();
+  });
+  it('should not throw when an array of selectors is present', function() {
+    expect(function(){
+      out.should.have(['div', '.one', '.two']);
+    }).toNotThrow();
+  });
+  it('should not throw when matching an empty array of selectors', function() {
+    expect(function(){
+      out.should.have([]);
+    }).toNotThrow();
+  });
+  it('should throw when at least a selector is not present', function() {
+    expect(function(){
+      out.should.have(['.one', 'table']);
     }).toThrow();
   });
 });
