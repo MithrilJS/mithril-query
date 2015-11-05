@@ -444,6 +444,15 @@ describe('components', function() {
     });
   });
 
+  describe('components that return components', function() {
+    it('should work', function() {
+      events.onunload = noop;
+      out = mq(m('div', m.component({ view: function() {
+        return myComponent;
+      }})));
+      out.should.have('aside.firstRender');
+    });
+  });
   describe('describe onunload component only', function() {
     it('should call onunload', function(done) {
       out = mq({

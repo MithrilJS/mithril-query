@@ -22,7 +22,7 @@ function isArray(thing) {
 }
 
 function isModule(thing) {
-  return  thing && typeof thing === 'object' && thing.controller && thing.view;
+  return  thing && typeof thing === 'object' && thing.view;
 }
 
 function isFuction(thing) {
@@ -103,7 +103,7 @@ function scan(render) {
         if (scopes[treePath]) {
           api.onunloaders.push(scopes[treePath].onunload);
         }
-        el = el.view(scopes[treePath]);
+        return matches(el.view(scopes[treePath]), treePath + PD + (el.key ? el.key : ''));
       }
       if (matchesSelector(el)) {
         foundEls.push(el);
