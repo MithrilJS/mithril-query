@@ -17,6 +17,10 @@ function isNumber(thing) {
   return typeof thing === 'number';
 }
 
+function isStringOrNumber(thing) {
+  return isString(thing) || isNumber(thing);
+}
+
 function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
 }
@@ -43,7 +47,7 @@ var language = cssauron({
     if (isString(node.children)) {
       return node.children;
     }
-    return isArray(node.children) ? node.children.filter(isString).concat('') : '';
+    return isArray(node.children) ? node.children.filter(isStringOrNumber).join('') : '';
   },
   id: function(node) {
     if (node.attrs) {
