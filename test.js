@@ -301,12 +301,14 @@ describe('access root element', function() {
 describe('trigger keyboard events', function() {
   it('should be possible to describe keyboard events', function() {
     var module = {
+      onupdate: noop,
       controller: function() {
         var scope = {
           visible: true,
           update: function(event) {
-            if (event.keyCode == 123) scope.visible = false;
-            if (event.keyCode == keyCode('esc')) scope.visible = true;
+            if (event.keyCode === 123) scope.visible = false;
+            if (event.keyCode === keyCode('esc')) scope.visible = true;
+            module.onupdate(event);
           }
         };
         return scope;
@@ -318,7 +320,18 @@ describe('trigger keyboard events', function() {
       }
     };
     var out = mq(module);
-    out.keydown('div', 'esc');
+    module.onupdate = function(event) {
+      expect(event.target.value).toEqual('foobar');
+      expect(event.altKey).toBe(true);
+      expect(event.shiftKey).toBe(true);
+      expect(event.ctrlKey).toBe(false);
+    };
+    out.keydown('div', 'esc', {
+      value: 'foobar',
+      altKey: true,
+      shiftKey: true
+    });
+    module.onupdate = noop;
     out.should.have('.visible');
     out.keydown('div', 123);
     out.should.have('.hidden');

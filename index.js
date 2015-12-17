@@ -242,10 +242,18 @@ function scan(render) {
 
   function triggerKey(eventName) {
     var fire = trigger(eventName);
-    return function keydown(selector, key, silent) {
+    return function keydown(selector, key, options) {
+      options = options || {};
+      var keyCode = isString(key) ? code(key) : key;
       fire(selector, {
-        keyCode: isString(key) ? code(key) : key
-      }, silent);
+        target: {value: options.value},
+        altKey: !!options.altKey,
+        shiftKey: !!options.shiftKey,
+        ctrlKey: !!options.ctrlKey,
+        type: eventName,
+        keyCode: keyCode,
+        which: keyCode,
+      }, !!options.silent);
     };
   }
 

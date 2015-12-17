@@ -181,6 +181,17 @@ you can either use `keycode` or the keys name. Mapping is done with
 [this lib](https://github.com/npmcomponent/yields-keycode). `keyup`, `keypress`
 are also supported.
 
+You can also provide additional options
+
+```javascript
+  $out.keydown('div', 'enter', {
+    altKey: true,
+    shiftKey: true,
+    ctrlKey: false,
+    value: 'foobar',
+    silent: true // if silent is set to true, no automatic redraw will happen
+  });
+```
 ### manual redraw
 
 You can also manually trigger redraw:
