@@ -118,6 +118,13 @@ function scan(render) {
       el.children.filter(identity).forEach(function(child) {
         // ignore text and number nodes
         if ((typeof child !== 'string') && (typeof child !== 'number')) {
+          child.inspect = function() {
+            return {
+              tag: child.tag,
+              children: child.children,
+              attrs: child.attrs
+            };
+          };
           child.parent = el;
         }
       });
@@ -290,6 +297,14 @@ function scan(render) {
     },
     have: shouldHave,
     contain: shouldContain
+  };
+  api.log = function(selector, logFn) {
+    var util = require('util');
+    (logFn || console.log)(util.inspect(api.find(selector), {
+      colors: true,
+      depth: null
+    }));
+    return api;
   };
   return api;
 }

@@ -469,6 +469,7 @@ describe('components', function() {
       out.should.have('aside.firstRender');
     });
   });
+
   describe('describe onunload component only', function() {
     it('should call onunload', function(done) {
       out = mq({
@@ -482,5 +483,16 @@ describe('components', function() {
       out.should.have('aside');
       out.onunload();
     });
+  });
+});
+
+describe('Logging', function() {
+  it('should log', function(done) {
+    function logFn(logOut) {
+      expect(logOut).toEqual('[ { tag: \u001b[32m\'span\'\u001b[39m,\n    children: \n     [ { tag: \u001b[32m\'strong\'\u001b[39m, children: [ \u001b[32m\'huhu\'\u001b[39m ], attrs: {} },\n       { tag: \u001b[32m\'em\'\u001b[39m, children: [ \u001b[32m\'haha\'\u001b[39m ], attrs: {} } ],\n    attrs: {} } ]');
+      done();
+    }
+    var out = mq(m('div', m('span', m('strong', 'huhu'), m('em', 'haha')), m('.bla', 'blup')));
+    out.log('span', logFn);
   });
 });

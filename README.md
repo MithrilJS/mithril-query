@@ -85,6 +85,12 @@ Returns `true` if any element in tree contains the string, otherwise `false`.
 
 If you need any other assertions, feel free to create an issue or pull request.
 
+### log(string, [logFN])
+
+Small helper function to log out what was selected. Mainly for debugging
+purposes. You can give an optional function which is called with the result.
+It defaults to `console.log`.
+
 Should style assertions
 -----------------------
 
