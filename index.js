@@ -90,24 +90,33 @@ function scan(render) {
     return select(language(selectorString))(el);
   }
 
+  function renderModule(module, treePath) {
+    if (!scopes[treePath]) {
+      scopes[treePath] = module.controller();
+      if (scopes[treePath]) {
+        api.onunloaders.push(scopes[treePath].onunload);
+      }
+    }
+    var el = module.view(scopes[treePath]);
+    el.parent = module.parent;
+    return el;
+  }
+
   function select(matchesSelector) {
     return function matches(el, treePath) {
       treePath = treePath || '';
       if (isArray(el)) {
-        return join(el.filter(identity).map(function(childEl, index) {
+        var foo = join(el.filter(identity).map(function(childEl, index) {
           return matches(childEl, treePath + PD + (childEl.key || index));
         }));
+        return foo;
       }
       var foundEls = [];
       if (!el) {
         return foundEls;
       }
       if (isModule(el)) {
-        scopes[treePath] = scopes[treePath] || el.controller();
-        if (scopes[treePath]) {
-          api.onunloaders.push(scopes[treePath].onunload);
-        }
-        return matches(el.view(scopes[treePath]), treePath + PD + (el.key ? el.key : ''));
+        return matches(renderModule(el, treePath), treePath + PD + (el.key ? el.key : ''));
       }
       if (matchesSelector(el)) {
         foundEls.push(el);
@@ -115,9 +124,12 @@ function scan(render) {
       if (!el.children || isString(el.children)) {
         return foundEls;
       }
-      el.children.filter(identity).forEach(function(child) {
-        // ignore text and number nodes
-        if ((typeof child !== 'string') && (typeof child !== 'number')) {
+      el.children.filter(identity).map(function(child) {
+        if ((typeof child === 'string') || (typeof child === 'number')) {
+          return;
+        }
+        child.parent = el;
+        if (!isModule(child)) {
           child.inspect = function() {
             return {
               tag: child.tag,
@@ -125,7 +137,6 @@ function scan(render) {
               attrs: child.attrs
             };
           };
-          child.parent = el;
         }
       });
       return foundEls.concat(matches(el.children, treePath));
