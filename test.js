@@ -3,7 +3,7 @@
 var m = require('mithril');
 var mq = require('./');
 var keyCode = require('yields-keycode');
-var expect = require('expect');
+var expect = require('expect').default;
 
 function noop() {}
 
