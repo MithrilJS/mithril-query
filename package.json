@@ -25,13 +25,13 @@
   },
   "homepage": "https://github.com/StephanHoyer/mithril-query",
   "devDependencies": {
-    "expect": "^1.6.0",
+    "expect": "1.15.1",
     "mithril": "0.2.3",
-    "mocha": "^2.2.4"
+    "mocha": "2.2.4"
   },
   "dependencies": {
-    "cssauron": "^1.2.0",
-    "yields-keycode": "^1.1.0"
+    "cssauron": "1.2.0",
+    "yields-keycode": "1.1.0"
   },
   "readmeFilename": "README.md",
   "gitHead": "b8930b06501d2083a31f674c5fd8d4f9ffe34eb4",
