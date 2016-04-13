@@ -136,6 +136,20 @@ mq(el).focus('#eventEl'); // triggers onFocusOfEventEl
 mq(el).setValue('input', 'huhu') //sets name prop to 'huhu'
 ```
 
+If you need, you can provide a fake-event as a second argument to the `click`-function.
+
+```javascript
+m('#eventEl', {
+    onclick: function(event) {
+        //event.target.value === 'baz'
+    }
+});
+
+mq(el).click('#eventEl', { target: { value: 'baz' } }); // triggers onClickOfEventEl
+```
+
+This also works for other events like `focus`, `blur`, `mousedown`, `mouseup`, `mouseover`, `mouseout`, `mouseenter`, `mouseleave`.
+
 Auto Rendering
 --------------
 
