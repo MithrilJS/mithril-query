@@ -4,7 +4,7 @@
   "description": "Query mithril virtual dom for testing purposes",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/mocha/bin/mocha test.js "
+    "test": "standard && mocha test.js "
   },
   "repository": {
     "type": "git",
@@ -27,7 +27,8 @@
   "devDependencies": {
     "expect": "1.18.0",
     "mithril": "0.2.4",
-    "mocha": "2.2.4"
+    "mocha": "2.2.4",
+    "standard": "^3.0.0"
   },
   "dependencies": {
     "cssauron": "1.2.0",

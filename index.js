@@ -335,7 +335,8 @@ function init (viewOrModuleOrRootEl, scope, b, c, d, e, f, noWay) {
     }
   } else if (isModule(viewOrModuleOrRootEl)) {
     var a = scope
-    scope = new viewOrModuleOrRootEl.controller(a, b, c, d, e, f)
+    var Controller = viewOrModuleOrRootEl.controller
+    scope = new Controller(a, b, c, d, e, f)
     api = scan(function () {
       return viewOrModuleOrRootEl.view(scope, a, b, c, d, e, f)
     })

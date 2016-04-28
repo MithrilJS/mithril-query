@@ -469,14 +469,14 @@ describe('components', function () {
     it('should work', function () {
       events.onunload = noop
       out = mq(m('div', m.component({ view: function () {
-          return myComponent
+        return myComponent
       }})))
       out.should.have('aside.firstRender')
     })
     it('should work with child selectors', function () {
       events.onunload = noop
       out = mq(m('div', m.component({ view: function () {
-          return m('.foo', m.component(myComponent, 'kiki'))
+        return m('.foo', m.component(myComponent, 'kiki'))
       }})))
       out.should.have('.foo aside.firstRender')
     })

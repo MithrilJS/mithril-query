@@ -19,44 +19,44 @@ You can run this tests serverside or use browserify and run them in browsers.
 
 ```javascript
 // simple module: simple.js
-var m = require('Mithril');
+var m = require('Mithril')
 
 module.exports = {
-  controller: function() {},
-  view: function(ctrl) {
+  controller: function () {},
+  view: function (ctrl) {
     return m('div', [
       m('span', 'spanContent'),
       m('#fooId', 'fooContent'),
       m('.barClass', 'barContent')
-    ]);
+    ])
   }
-};
+}
 ```
 
 ```javascript
 // test for simple module: simple.test.js
-var test = require('tape').test;
-var simple = require('./simple');
-var mq = require('mithril-query');
+var test = require('tape').test
+var simple = require('./simple')
+var mq = require('mithril-query')
 
-test('simple module', function(t) {
-  t.test('controller', function(t) {
-    t.equal(typeof simple.controller, 'function', 'should be a function');
-    t.end();
-  });
-  t.test('view', function(t) {
-    t.equal(typeof simple.view, 'function', 'should be a function');
-    var output = simple.view(simple.controller());
-    $output = mq(output);
-    t.ok($output.has('span'), 'should create span node');
-    t.ok($output.has('div > span'), 'child selectors \o/');
-    t.ok($output.has('#fooId'), 'should create fooId node');
-    t.ok($output.has('.barClass'), 'should create barClass node');
-    t.ok($output.has(':contains(barContent)'), 'should create node with content barContent');
-    t.ok($output.contains('barContent'), 'should create node with content barContent');
-    t.end();
-  });
-});
+test('simple module', function (t) {
+  t.test('controller', function (t) {
+    t.equal(typeof simple.controller, 'function', 'should be a function')
+    t.end()
+  })
+  t.test('view', function (t) {
+    t.equal(typeof simple.view, 'function', 'should be a function')
+    var output = simple.view(simple.controller())
+    $output = mq(output)
+    t.ok($output.has('span'), 'should create span node')
+    t.ok($output.has('div > span'), 'child selectors \o/')
+    t.ok($output.has('#fooId'), 'should create fooId node')
+    t.ok($output.has('.barClass'), 'should create barClass node')
+    t.ok($output.has(':contains(barContent)'), 'should create node with content barContent')
+    t.ok($output.contains('barContent'), 'should create node with content barContent')
+    t.end()
+  })
+})
 ```
 
 Run the test with
@@ -99,24 +99,24 @@ Now you can use these nice assertions. They throw errors if they're not fullfile
 
 ```javascript
 // test for simple module: simple.test.js
-var test = require('tape').test;
-var simple = require('./simple');
-var mq = require('mithril-query');
+var test = require('tape').test
+var simple = require('./simple')
+var mq = require('mithril-query')
 
-test('simple module', function(t) {
-  t.test('view', function(t) {
-    var output = simple.view(simple.controller());
-    $output = mq(output);
-    $output.should.have('span'); //asserts to have at least one span element
-    $output.should.have(4,'.even'); //asserts to have four elements with class 'even'
-    $output.should.have.at.least(4,'li'); //asserts to have at least four li-elements
-    $output.should.have(['.one', '.two', '.three']); // asserts to have at least one element from each selector
-    $output.should.not.have('#main'); //asserts to not have an element with id 'main'
-    $output.should.contain('hi'); //asserts to contain the string 'hi'
-    $output.should.not.contain('bye'); //asserts to not contain the string 'bye'
-    t.end();
-  });
-});
+test('simple module', function (t) {
+  t.test('view', function (t) {
+    var output = simple.view(simple.controller())
+    $output = mq(output)
+    $output.should.have('span') //asserts to have at least one span element
+    $output.should.have(4,'.even') //asserts to have four elements with class 'even'
+    $output.should.have.at.least(4,'li') //asserts to have at least four li-elements
+    $output.should.have(['.one', '.two', '.three']) // asserts to have at least one element from each selector
+    $output.should.not.have('#main') //asserts to not have an element with id 'main'
+    $output.should.contain('hi') //asserts to contain the string 'hi'
+    $output.should.not.contain('bye') //asserts to not contain the string 'bye'
+    t.end()
+  })
+})
 ```
 
 Event triggering
@@ -132,8 +132,8 @@ var el = [
     onfocus: onFocusOfEventEl,
   })
 
-mq(el).click('#eventEl'); // triggers onClickOfEventEl
-mq(el).focus('#eventEl'); // triggers onFocusOfEventEl
+mq(el).click('#eventEl') // triggers onClickOfEventEl
+mq(el).focus('#eventEl') // triggers onFocusOfEventEl
 mq(el).setValue('input', 'huhu') //sets name prop to 'huhu'
 ```
 
@@ -141,12 +141,12 @@ If you need, you can provide a fake-event as a second argument to the `click`-fu
 
 ```javascript
 m('#eventEl', {
-    onclick: function(event) {
+    onclick: function (event) {
         //event.target.value === 'baz'
     }
-});
+})
 
-mq(el).click('#eventEl', { target: { value: 'baz' } }); // triggers onClickOfEventEl
+mq(el).click('#eventEl', { target: { value: 'baz' } }) // triggers onClickOfEventEl
 ```
 
 This also works for other events like `focus`, `blur`, `mousedown`, `mouseup`, `mouseover`, `mouseout`, `mouseenter`, `mouseleave`.
@@ -164,27 +164,27 @@ Example:
 ```javascript
   // module code
   var module = {
-    controller: function() {
+    controller: function () {
       var scope = {
         visible: true,
-        toggleMe: function() { scope.visible = !scope.visible; }
-      };
-      return scope;
+        toggleMe: function () { scope.visible = !scope.visible }
+      }
+      return scope
     },
-    view: function(scope) {
+    view: function (scope) {
       return m(scope.visible ? '.visible' : '.hidden', {
         onclick: scope.toggleMe
-      }, 'Test');
+      }, 'Test')
     }
-  };
+  }
 
   // actual test
-  var $out = mq(module);
-  $out.should.have('.visible');
-  $out.click('.visible');
-  $out.should.have('.hidden');
-  $out.click('.hidden', null, true);
-  $out.should.have('.hidden');
+  var $out = mq(module)
+  $out.should.have('.visible')
+  $out.click('.visible')
+  $out.should.have('.hidden')
+  $out.click('.hidden', null, true)
+  $out.should.have('.hidden')
 ```
 
 As you can see, you can prevent autoredraw by providing a `true` as last
@@ -195,8 +195,8 @@ argument to `click` method. This also works for `blur`, `focus` and `setValue`.
 It also supports key events
 
 ```javascript
-  $out.keydown('div', 'enter');
-  $out.keydown('div', 27);
+  $out.keydown('div', 'enter')
+  $out.keydown('div', 27)
 ```
 you can either use `keycode` or the keys name. Mapping is done with
 [this lib](https://github.com/npmcomponent/yields-keycode). `keyup`, `keypress`
@@ -211,16 +211,16 @@ You can also provide additional options
     ctrlKey: false,
     value: 'foobar',
     silent: true // if silent is set to true, no automatic redraw will happen
-  });
+  })
 ```
 ### manual redraw
 
 You can also manually trigger redraw:
 
 ```javascript
-var $out = mq(module);
-$out.should.have('.visible');
-$out.redraw();
+var $out = mq(module)
+$out.should.have('.visible')
+$out.redraw()
 ```
 
 It's also possible to insert a view and a scope, just in case you don't follow
@@ -228,13 +228,13 @@ the standard mithril pattern (controller/view)... like I do sometimes ;)
 
 ```javascript
 var scope = {
-  isVisible: true;
+  isVisible: true
 }
 
-var $out = mq(view, scope);
-$out.should.have('.visible');
-$out.click('.visible');
-$out.should.have('.hidden');
+var $out = mq(view, scope)
+$out.should.have('.visible')
+$out.click('.visible')
+$out.should.have('.hidden')
 ```
 
 If you need to access the rendered root element you can simply access it with
@@ -253,20 +253,20 @@ function.
 
 ```javascript
 var module = {
-  controller: function() {
+  controller: function () {
     return {
-      onunload: function() {
+      onunload: function () {
         //clean up stuff
       }
-    };
+    }
   },
-  view: function(scope) {
+  view: function (scope) {
     // do what ever
   }
-};
+}
 
-var $out = mq(module);
-$out.onunload(); // calls upper defined onunload on the controller result
+var $out = mq(module)
+$out.onunload() // calls upper defined onunload on the controller result
 ```
 
 Selectors
