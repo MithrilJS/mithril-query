@@ -10,7 +10,7 @@ function noop () {}
 
 describe('mithril query', function () {
   describe('basic selection of things', function () {
-    var el, out, tagEl, concatClassEl, classEl, idEl, innerString
+    var el, out, tagEl, concatClassEl, classEl, idEl, innerString, dataAttr
     var devilEl, idClassEl, arrayOfArrays, rawHtml, numbah, disabled
     var contentAsArray
     var msxOutput
@@ -25,12 +25,13 @@ describe('mithril query', function () {
       idClassEl = m('#three.three')
       arrayOfArrays = m('#arrayArray')
       disabled = m('[disabled]')
+      dataAttr = m('[data-foo=bar]')
       contentAsArray = m('.contentAsArray', m('.inner', [123, 'foobar']))
       rawHtml = m.trust('<div class="trusted"></div>')
       msxOutput = { tag: 'div', attrs: { class: 'msx' }, children: [] }
       numbah = 10
       el = m('.root', [tagEl, concatClassEl, classEl, innerString, idEl,
-        devilEl, idClassEl, [[arrayOfArrays]], undefined,
+        devilEl, idClassEl, [[arrayOfArrays]], undefined, dataAttr,
         numbah, rawHtml, disabled, msxOutput, contentAsArray])
       out = mq(el)
     })
@@ -46,7 +47,9 @@ describe('mithril query', function () {
       expect(out.first('#arrayArray')).toEqual(arrayOfArrays)
       expect(out.first(':contains(Inner String)').attrs.className).toEqual('root')
       out.should.have('.contentAsArray :contains(123foobar)')
-      expect(out.first('[disabled]')).toEqual(disabled)
+      expect(out.first('[disabled=]')).toEqual(disabled)
+      expect(out.first('[data-foo=bar]')).toEqual(dataAttr)
+      expect(out.find('[data-foo=no]')).toEqual([])
       expect(out.first('.msx')).toEqual(msxOutput)
     })
   })
