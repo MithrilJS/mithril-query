@@ -204,9 +204,9 @@ function scan (render) {
 
   function shouldHave (expectedCount, selector) {
     if (!selector) {
-      return isArray(expectedCount) ?
-        shouldHaveCollection(expectedCount) :
-        shouldHaveAtLeast(1, expectedCount)
+      return isArray(expectedCount)
+        ? shouldHaveCollection(expectedCount)
+        : shouldHaveAtLeast(1, expectedCount)
     }
 
     var actualCount = find(selector, api.rootEl).length
@@ -270,7 +270,7 @@ function scan (render) {
         ctrlKey: !!options.ctrlKey,
         type: eventName,
         keyCode: keyCode,
-        which: keyCode,
+        which: keyCode
       }, !!options.silent)
     }
   }
@@ -304,7 +304,7 @@ function scan (render) {
   api.should = {
     not: {
       have: shouldNotHave,
-      contain: shouldNotContain,
+      contain: shouldNotContain
     },
     have: shouldHave,
     contain: shouldContain
