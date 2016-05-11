@@ -1,7 +1,8 @@
 /* eslint-env mocha */
 'use strict'
 
-var m = require('mithril')
+var m = require('mithril/render/hyperscript')
+var mTrust = require('mithril/render/trust')
 var mq = require('./')
 var keyCode = require('yields-keycode')
 var expect = require('expect')
@@ -27,14 +28,14 @@ describe('mithril query', function () {
       disabled = m('[disabled]')
       dataAttr = m('[data-foo=bar]')
       contentAsArray = m('.contentAsArray', m('.inner', [123, 'foobar']))
-      rawHtml = m.trust('<div class="trusted"></div>')
-      msxOutput = { tag: 'div', attrs: { class: 'msx' }, children: [] }
+      rawHtml = mTrust('<div class="trusted"></div>')
       numbah = 10
       el = m('.root', [tagEl, concatClassEl, classEl, innerString, idEl,
         devilEl, idClassEl, [[arrayOfArrays]], undefined, dataAttr,
         numbah, rawHtml, disabled, msxOutput, contentAsArray])
       out = mq(el)
     })
+
     it('should allow to select by selectors', function () {
       expect(out.first('span')).toEqual(tagEl)
       expect(out.first('.one')).toEqual(classEl)
@@ -50,7 +51,6 @@ describe('mithril query', function () {
       expect(out.first('[disabled=]')).toEqual(disabled)
       expect(out.first('[data-foo=bar]')).toEqual(dataAttr)
       expect(out.find('[data-foo=no]')).toEqual([])
-      expect(out.first('.msx')).toEqual(msxOutput)
     })
   })
 
@@ -111,7 +111,7 @@ describe('mithril query', function () {
 
     describe('trusted content', function () {
       it('should allow to select by content', function () {
-        var out = mq(m('.containstest', [m.trust('<p>Trusted String</p>'), 'Inner String']))
+        var out = mq(m('.containstest', [mTrust('<p>Trusted String</p>'), 'Inner String']))
         expect(out.contains('Inner String')).toBe(true)
         expect(out.contains('Trusted String')).toBe(true)
       })
@@ -157,7 +157,7 @@ describe('should style assertions', function () {
     }).toNotThrow()
   })
 
-  it('should throw when not containing sting', function () {
+  it('should not throw when containing string', function () {
     expect(function () {
       out.should.contain('XXXXX')
     }).toNotThrow()
@@ -175,37 +175,42 @@ describe('should style assertions', function () {
     }).toThrow()
   })
 
-  it('should throw when containing unexpected sting', function () {
+  it('should throw when containing unexpected string', function () {
     expect(function () {
       out.should.not.contain('XXXXX')
     }).toThrow()
   })
 
-  it('should throw when containing unexpected sting', function () {
+  it('should not throw when not containing string as expected', function () {
     expect(function () {
       out.should.not.contain('FOOOO')
     }).toNotThrow()
   })
+
   it('should not throw when there are enough elements', function () {
     expect(function () {
       out.should.have.at.least(3, 'div')
     }).toNotThrow()
   })
+
   it('should throw when not enough elements', function () {
     expect(function () {
       out.should.have.at.least(40000, 'div')
     }).toThrow()
   })
+
   it('should not throw when an array of selectors is present', function () {
     expect(function () {
       out.should.have(['div', '.one', '.two'])
     }).toNotThrow()
   })
+
   it('should not throw when matching an empty array of selectors', function () {
     expect(function () {
       out.should.have([])
     }).toNotThrow()
   })
+
   it('should throw when at least a selector is not present', function () {
     expect(function () {
       out.should.have(['.one', 'table'])
@@ -230,25 +235,26 @@ describe('null objects', function () {
 })
 
 describe('autorender', function () {
-  describe('autorerender module', function () {
+  describe('autorerender component', function () {
     var out
 
     beforeEach(function () {
-      var module = {
-        controller: function () {
-          var scope = {
+      var component = {
+        oninit: function (node) {
+          node.state = {
             visible: true,
-            toggleMe: function () { scope.visible = !scope.visible }
+            toggleMe: function () {
+              node.state.visible = !node.state.visible
+            }
           }
-          return scope
         },
-        view: function (scope) {
-          return m(scope.visible ? '.visible' : '.hidden', {
-            onclick: scope.toggleMe
+        view: function (node) {
+          return m(node.state.visible ? '.visible' : '.hidden', {
+            onclick: node.state.toggleMe
           }, 'Test')
         }
       }
-      out = mq(module)
+      out = mq(component)
     })
 
     it('should autorender', function () {
@@ -265,20 +271,20 @@ describe('autorender', function () {
           m('option', {value: 'foo', selected: true})
         ])
       })
-      out.should.have('option[selected]')
+      out.should.have('option[selected=]')
     })
   })
 
   describe('autorerender function', function () {
     it('should autorender function', function () {
-      function view (scope) {
-        return m(scope.visible ? '.visible' : '.hidden', {
-          onclick: function () { scope.visible = !scope.visible }
+      function view (node) {
+        return m(node.state.visible ? '.visible' : '.hidden', {
+          onclick: function () { node.state.visible = !node.state.visible }
         }, 'Test')
       }
 
-      var scope = { visible: true }
-      var out = mq(view, scope)
+      var node = { state: { visible: true } }
+      var out = mq(view, node)
       out.should.have('.visible')
       out.click('.visible')
       out.should.have('.hidden')
@@ -294,37 +300,36 @@ describe('access root element', function () {
       return m('div', ['foo', 'bar'])
     }
     var out = mq(view)
-    expect(out.rootEl).toEqual({
-      attrs: {},
-      children: [ 'foo', 'bar' ],
-      tag: 'div'
-    })
+    expect(out.rootNode.tag).toEqual('div')
+    expect(out.rootNode.children.length).toEqual(2)
+    expect(out.rootNode.children[0].children).toEqual('foo')
+    expect(out.rootNode.children[1].children).toEqual('bar')
   })
 })
 
 describe('trigger keyboard events', function () {
-  it('should be possible to describe keyboard events', function () {
-    var module = {
-      onupdate: noop,
-      controller: function () {
-        var scope = {
+  it('should be possible to trigger keyboard events', function () {
+    var component = {
+      updateSpy: noop,
+      oninit: function (node) {
+        node.state = {
           visible: true,
           update: function (event) {
-            if (event.keyCode === 123) scope.visible = false
-            if (event.keyCode === keyCode('esc')) scope.visible = true
-            module.onupdate(event)
+            if (event.keyCode === 123) node.state.visible = false
+            if (event.keyCode === keyCode('esc')) node.state.visible = true
+            component.updateSpy(event)
           }
         }
-        return scope
+        return node.state
       },
-      view: function (scope) {
-        return m(scope.visible ? '.visible' : '.hidden', {
-          onkeydown: scope.update
+      view: function (node) {
+        return m(node.state.visible ? '.visible' : '.hidden', {
+          onkeydown: node.state.update
         }, 'describe')
       }
     }
-    var out = mq(module)
-    module.onupdate = function (event) {
+    var out = mq(component)
+    component.updateSpupdateSpy = function (event) {
       expect(event.target.value).toEqual('foobar')
       expect(event.altKey).toBe(true)
       expect(event.shiftKey).toBe(true)
@@ -335,117 +340,111 @@ describe('trigger keyboard events', function () {
       altKey: true,
       shiftKey: true
     })
-    module.onupdate = noop
+    component.updateSpy = noop
     out.should.have('.visible')
     out.keydown('div', 123)
     out.should.have('.hidden')
   })
 })
 
-describe('onunload', function () {
-  it('should be possible when init with view, scope', function (done) {
-    function view () {}
-    var scope = {
-      onunload: done
-    }
-    var out = mq(view, scope)
-    out.onunload()
-  })
-  it('should be possible when init with rendered view', function () {
-    function view () {
-      return 'foo'
-    }
-    var out = mq(view())
-    expect(out.onunload).toNotThrow
-  })
-  it('should be possible when init with module', function (done) {
-    var module = {
-      view: function () {},
-      controller: function () {
-        return {
-          onunload: done
-        }
-      }
-    }
-    var out = mq(module)
-    out.onunload()
+describe('onremove', function () {
+  it('should not throw when init with rendered view', function () {
+    var out = mq(m('span', 'random stuff'))
+    expect(out.onremove).toNotThrow
   })
 })
 
 describe('components', function () {
-  var out
-  var events = {onunload: noop}
-  var myComponent = {
-    controller: function (data) {
-      return {
-        foo: data || 'bar',
-        onunload: function () {
-          events.onunload()
-        },
-        firstRender: true
-      }
-    },
-    view: function (scope, data) {
-      var tag = 'aside'
-      if (scope.firstRender) {
-        tag += '.firstRender'
-        scope.firstRender = false
-      }
-      return m(tag, [
-        data,
-        'hello',
-        scope.foo
-      ])
-    }
-  }
+  var out, myComponent
 
-  describe('basic usage', function () {
-    it('should work with components', function () {
-      out = mq(m('div', {
-        controller: noop,
+  beforeEach(function () {
+    myComponent = {
+      oninit: function (node) {
+        node.state = {
+          foo: node.attrs.data || 'bar',
+          firstRender: true
+        }
+      },
+      view: function (node) {
+        var tag = 'aside'
+        if (node.state.firstRender) {
+          tag += '.firstRender'
+          node.state.firstRender = false
+        }
+        return m(tag, [
+          node.attrs.data,
+          'hello',
+          node.state.foo
+        ])
+      }
+    }
+  })
+
+  describe('plain components', function () {
+    it('should work without args', function () {
+      out = mq(myComponent)
+      out.should.have('aside')
+      out.should.contain('hello')
+    })
+
+    it('should work with directly injected components', function () {
+      out = mq(myComponent, {data: 'my super data'})
+      out.should.have('aside')
+      out.should.contain('my super data')
+    })
+
+    it('should work without oninit', function () {
+      var simpleComponent = { view: function (node) {
+        return m('span', node.attrs.data)
+      }}
+      out = mq(simpleComponent, { data: 'mega' })
+      out.should.have('span')
+      out.should.contain('mega')
+    })
+
+    it('should call onremove on globalonremove', function (done) {
+      myComponent.onremove = function () { done() }
+      var out = mq(myComponent)
+      out.onremove()
+    })
+  })
+
+  describe('embedded components', function () {
+    it('should work without args', function () {
+      out = mq(m('div', m({
         view: function () {
           return m('strong', 'bar')
         }
-      }))
+      })))
       out.should.have('strong')
       out.should.contain('bar')
     })
-  })
 
-  describe('use with m.component', function () {
-    it('should work with presetted components', function () {
-      out = mq(m('span', m.component({
-        controller: noop,
-        view: function (scope, data) {
-          return m('aside', data)
-        }
-      }), 'huhu'))
+    it('should work with args', function () {
+      out = mq(m('span', m(myComponent, { data: 'my little data' })))
       out.should.have('aside')
-      out.should.contain('huhu')
+      out.should.contain('my little data')
     })
-  })
 
-  describe('describe plain component with init args', function () {
-    it('should work with directly injected components', function () {
-      out = mq(myComponent, 'huhu')
-      out.should.have('aside')
-      out.should.contain('huhu')
+    it('should work without oninit', function () {
+      var simpleComponent = { view: function (node) {
+        return m('span', node.attrs.data)
+      }}
+      out = mq(m('div', m(simpleComponent, { data: 'mega' })))
+      out.should.have('span')
+      out.should.contain('mega')
     })
-  })
 
-  describe('describe onunload', function () {
-    it('should call onunload', function (done) {
-      events.onunload = done
-      out = mq(m('div', m.component(myComponent, 'huhu')))
-      out.should.have('aside')
-      out.onunload()
+    it('should call onremove on globalonremove', function (done) {
+      myComponent.onremove = function () { done() }
+      out = mq(m('span', m(myComponent)))
+      out.onremove()
     })
   })
 
   describe('state', function () {
     it('should preserve components state', function () {
-      events.onunload = noop
-      out = mq(m('div', m.component(myComponent, 'haha')))
+      out = mq(m('div', m(myComponent, 'haha')))
       out.should.have('aside.firstRender')
       out.redraw()
       out.should.not.have('aside.firstRender')
@@ -454,10 +453,9 @@ describe('components', function () {
 
   describe('state with multiple of same elements', function () {
     it('should preserve components state for every used component', function () {
-      events.onunload = noop
       out = mq(m('div', [
-        myComponent,
-        myComponent
+        m(myComponent),
+        m(myComponent)
       ]))
       out.should.have(2, 'aside.firstRender')
       out.redraw()
@@ -467,33 +465,20 @@ describe('components', function () {
 
   describe('components that return components', function () {
     it('should work', function () {
-      events.onunload = noop
-      out = mq(m('div', m.component({ view: function () {
-        return myComponent
-      }})))
+      out = mq(m('div', m({
+        view: function () {
+          return m(myComponent)
+        }
+      })))
       out.should.have('aside.firstRender')
     })
     it('should work with child selectors', function () {
-      events.onunload = noop
-      out = mq(m('div', m.component({ view: function () {
-        return m('.foo', m.component(myComponent, 'kiki'))
-      }})))
-      out.should.have('.foo aside.firstRender')
-    })
-  })
-
-  describe('describe onunload component only', function () {
-    it('should call onunload', function (done) {
-      out = mq({
-        controller: function () {
-          return { onunload: done }
-        },
+      out = mq(m('div', m({
         view: function () {
-          return m('aside', 'bar')
+          return m('.foo', m(myComponent, 'kiki'))
         }
-      })
-      out.should.have('aside')
-      out.onunload()
+      })))
+      out.should.have('.foo aside.firstRender')
     })
   })
 })
@@ -501,10 +486,10 @@ describe('components', function () {
 describe('Logging', function () {
   it('should log', function (done) {
     function logFn (logOut) {
-      expect(logOut).toEqual("[ { tag: \u001b[32m'span'\u001b[39m,\n    children: \n     [ { tag: \u001b[32m'strong'\u001b[39m, children: [ \u001b[32m'huhu'\u001b[39m ], attrs: {} },\n       { tag: \u001b[32m'em'\u001b[39m, children: [ \u001b[32m'haha'\u001b[39m ], attrs: {} } ],\n    attrs: {} } ]")
+      expect(logOut).toEqual("[ { tag: [32m'span'[39m,\n    children: \n     [ { tag: [32m'strong'[39m,\n         children: [90mundefined[39m,\n         text: [32m'huhu'[39m,\n         attrs: { className: [32m'tick'[39m } },\n       { tag: [32m'em'[39m,\n         children: [90mundefined[39m,\n         text: [32m'haha'[39m,\n         attrs: { id: [32m'tack'[39m } } ],\n    text: [90mundefined[39m,\n    attrs: [90mundefined[39m } ]")
       done()
     }
-    var out = mq(m('div', m('span', m('strong', 'huhu'), m('em', 'haha')), m('.bla', 'blup')))
+    var out = mq(m('div', m('span', m('strong.tick', 'huhu'), m('em#tack', 'haha')), m('.bla', 'blup')))
     out.log('span', logFn)
   })
 })
