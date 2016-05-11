@@ -1,5 +1,6 @@
 'use strict'
 
+var m = require('mithril/render/hyperscript')
 var cssauron = require('cssauron')
 var code = require('yields-keycode')
 
@@ -21,20 +22,35 @@ function isStringOrNumber (thing) {
   return isString(thing) || isNumber(thing)
 }
 
+function getContent (thing) {
+  if (!thing) {
+    return ''
+  }
+  if (isString(thing)) {
+    return thing
+  }
+  if (isNumber(thing)) {
+    return '' + thing
+  }
+  if (thing.tag === '#') {
+    return getContent(thing.children)
+  }
+  if (isArray(thing)) {
+    return thing.map(getContent).join('')
+  }
+  return ''
+}
+
 function isArray (thing) {
   return Object.prototype.toString.call(thing) === '[object Array]'
 }
 
-function isModule (thing) {
+function isComponent (thing) {
   return thing && typeof thing === 'object' && thing.view
 }
 
 function isFuction (thing) {
   return typeof thing === 'function'
-}
-
-function isTrusted (thing) {
-  return thing.$trusted
 }
 
 function call (thing) {
@@ -44,30 +60,31 @@ function call (thing) {
 var language = cssauron({
   tag: 'tag',
   contents: function (node) {
-    if (isString(node.children)) {
-      return node.children
+    var content = node.text || ''
+    if (isStringOrNumber(node.children)) {
+      return content + node.children
     }
-    return isArray(node.children) ? node.children.filter(isStringOrNumber).join('') : ''
+    return content + getContent(node.renderedChildren)
   },
   id: function (node) {
     if (node.attrs) {
-      return node.attrs.id
+      return node.attrs.id || ''
     }
     return ''
   },
   class: function (node) {
     if (node.attrs) {
-      return node.attrs.className || node.attrs['class']
+      return node.attrs.className
     }
     return ''
   },
   parent: 'parent',
   children: function (node) {
-    return node.children.filter(identity)
+    return isArray(node.renderedChildren) ? node.renderedChildren.filter(identity) : []
   },
   attr: function (node, attr) {
     if (node.attrs) {
-      return node.attrs[attr]
+      return node.attrs[attr] === true ? '' : node.attrs[attr]
     }
   }
 })
@@ -78,124 +95,112 @@ function join (arrays) {
   }, [])
 }
 
-function scan (render) {
-  var api = {
-    rootEl: render(),
-    onunloaders: []
-  }
-
-  var scopes = {}
-
-  function find (selectorString, el) {
-    return select(language(selectorString))(el)
-  }
-
-  function renderModule (module, treePath) {
-    if (!scopes[treePath]) {
-      scopes[treePath] = module.controller()
-      if (scopes[treePath]) {
-        api.onunloaders.push(scopes[treePath].onunload)
+function renderComponents (states, onremovers) {
+  function renderComponent (component, treePath) {
+    if (!states[treePath] && component.tag.oninit) {
+      component.tag.oninit(component)
+      states[treePath] = component.state
+      if (component.tag.onremove) {
+        onremovers.push(function () {
+          component.tag.onremove(component)
+        })
       }
+    } else {
+      component.state = states[treePath]
     }
-    var el = module.view(scopes[treePath])
-    el.parent = module.parent
-    return el
+    var node = component.tag.view(component)
+    node.parent = component.parent
+    return node
+  }
+
+  return function renderNode (node, treePath) {
+    if (!node) {
+      return ''
+    }
+    if (isArray(node)) {
+      return node.map(function (subnode, index) {
+        return renderNode(subnode, treePath + PD + index)
+      })
+    }
+    if (isComponent(node.tag)) {
+      return renderNode(renderComponent(node, treePath + PD + (node.key || '')))
+    }
+    if (node.children) {
+      node.renderedChildren = renderNode(node.children, treePath + PD + (node.key || ''))
+    }
+    return node
+  }
+}
+
+function scan (render) {
+  var states = {}
+  var onremovers = []
+  var renderNode = renderComponents(states, onremovers)
+  var api = {
+    onremovers: onremovers,
+    redraw: function () {
+      api.rootNode = renderNode(render(), 'ROOT')
+    }
+  }
+  api.redraw()
+
+  function find (selectorString, node) {
+    return select(language(selectorString))(node)
   }
 
   function select (matchesSelector) {
-    return function matches (el, treePath) {
-      treePath = treePath || ''
-      if (isArray(el)) {
-        var foo = join(el.filter(identity).map(function (childEl, index) {
-          return matches(childEl, treePath + PD + (childEl.key || index))
+    return function matches (node) {
+      if (!node) {
+        return []
+      }
+      if (isArray(node)) {
+        return join(node.filter(identity).map(function (childNode) {
+          return matches(childNode)
         }))
-        return foo
       }
-      var foundEls = []
-      if (!el) {
-        return foundEls
+      var foundNodes = []
+      if (matchesSelector(node)) {
+        foundNodes.push(node)
       }
-      if (isModule(el)) {
-        return matches(renderModule(el, treePath), treePath + PD + (el.key ? el.key : ''))
+      if (!node.children || isStringOrNumber(node.children)) {
+        return foundNodes
       }
-      if (matchesSelector(el)) {
-        foundEls.push(el)
-      }
-      if (!el.children || isString(el.children)) {
-        return foundEls
-      }
-      el.children.filter(identity).map(function (child) {
+      node.renderedChildren.filter(identity).map(function (child) {
         if ((typeof child === 'string') || (typeof child === 'number')) {
           return
         }
-        child.parent = el
-        if (!isModule(child)) {
-          child.inspect = function () {
-            return {
-              tag: child.tag,
-              children: child.children,
-              attrs: child.attrs
-            }
+        child.parent = node
+        child.inspect = function () {
+          return {
+            tag: child.tag,
+            children: child.children,
+            text: child.text,
+            attrs: child.attrs
           }
         }
       })
-      return foundEls.concat(matches(el.children, treePath))
+      return foundNodes.concat(matches(node.renderedChildren))
     }
   }
 
   function first (selector) {
-    var el = find(selector, api.rootEl)[0]
-    if (!el) {
+    var node = find(selector, api.rootNode)[0]
+    if (!node) {
       throw new Error('No element matches ' + selector)
     }
-    return el
+    return node
   }
 
   function has (selector) {
-    return find(selector, api.rootEl).length > 0
+    return find(selector, api.rootNode).length > 0
   }
 
-  function contains (value, el) {
-    if (isModule(el)) {
-      var scope
-      if (el.controller) {
-        scope = el.controller()
-        if (scope && scope.onunload) {
-          api.onunloaders.push(scope.onunload)
-        }
-      }
-      el = el.view(scope)
-    }
-    if (!el) {
-      return false
-    }
-    if (isString(el) || isTrusted(el)) {
-      return el.indexOf(value) >= 0
-    }
-    if (isString(el.children)) {
-      return el.children.indexOf(value) >= 0
-    }
-    if (isNumber(el)) {
-      return el === value
-    }
-    if (isNumber(el.children)) {
-      return el.children === value
-    }
-    if (isArray(el)) {
-      return el.some(function (child) {
-        return contains(value, child)
-      })
-    }
-    if (el.children && el.children.length) {
-      return el.children.some(function (child) {
-        return contains(value, child)
-      })
-    }
-    return false
+  function contains (value, node) {
+    return !!first(':contains(' + value + ')', node)
   }
 
   function shouldHaveAtLeast (minCount, selector) {
-    var actualCount = find(selector, api.rootEl).length
+    var actualCount = find(selector, api.rootNode).length
     if (actualCount < minCount) {
       throw new Error('Wrong count of elements that matches "' + selector +
         '"\n  expected: >=' + minCount + '\n  actual: ' + actualCount)
@@ -209,7 +214,7 @@ function scan (render) {
         : shouldHaveAtLeast(1, expectedCount)
     }
 
-    var actualCount = find(selector, api.rootEl).length
+    var actualCount = find(selector, api.rootNode).length
     if (actualCount !== expectedCount) {
       throw new Error('Wrong count of elements that matches "' + selector +
         '"\n  expected: ' + expectedCount + '\n  actual: ' + actualCount)
@@ -227,15 +232,18 @@ function scan (render) {
   }
 
   function shouldContain (string) {
-    if (!contains(string, api.rootEl)) {
+    if (!contains(string, api.rootNode)) {
       throw new Error('Expected "' + string + '" not found!')
     }
   }
 
   function shouldNotContain (string) {
-    if (contains(string, api.rootEl)) {
-      throw new Error('Unexpected "' + string + '" found!')
+    try {
+      contains(string, api.rootNode)
+    } catch (e) {
+      return true
     }
+    throw new Error('Unexpected "' + string + '" found!')
   }
 
   function setValue (selector, string, silent) {
@@ -279,17 +287,13 @@ function scan (render) {
     least: shouldHaveAtLeast
   }
 
-  api.redraw = function () {
-    api.rootEl = render()
-    return api
-  }
   api.first = first
   api.has = has
   api.contains = function (value) {
-    return contains(value, api.rootEl)
+    return contains(value, api.rootNode)
   }
   api.find = function (selector) {
-    return find(selector, api.rootEl)
+    return find(selector, api.rootNode)
   }
   api.setValue = setValue
   ;['focus', 'click', 'blur', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'].map(function (eventName) {
@@ -320,37 +324,25 @@ function scan (render) {
   return api
 }
 
-function init (viewOrModuleOrRootEl, scope, b, c, d, e, f, noWay) {
-  if (noWay) {
-    throw new Error('More than 6 args of a component? Seriously? Such bad style is not supported.')
-  }
+function init (viewOrComponentOrRootNode, nodeOrAttrs) {
   var api = {}
-  var isViewFunction = typeof viewOrModuleOrRootEl === 'function'
+  var isViewFunction = typeof viewOrComponentOrRootNode === 'function'
   if (isViewFunction) {
     api = scan(function () {
-      return viewOrModuleOrRootEl(scope)
+      return viewOrComponentOrRootNode(nodeOrAttrs)
     })
-    if (scope) {
-      api.onunloaders.push(scope.onunload)
-    }
-  } else if (isModule(viewOrModuleOrRootEl)) {
-    var a = scope
-    var Controller = viewOrModuleOrRootEl.controller
-    scope = new Controller(a, b, c, d, e, f)
+  } else if (isComponent(viewOrComponentOrRootNode)) {
     api = scan(function () {
-      return viewOrModuleOrRootEl.view(scope, a, b, c, d, e, f)
+      return m(viewOrComponentOrRootNode, nodeOrAttrs)
     })
-    if (scope) {
-      api.onunloaders.push(scope.onunload)
-    }
   } else {
     // assume that first argument is rendered view
     api = scan(function () {
-      return viewOrModuleOrRootEl
+      return viewOrComponentOrRootNode
     })
   }
-  api.onunload = function () {
-    api.onunloaders.filter(isFuction).map(call)
+  api.onremove = function () {
+    api.onremovers.filter(isFuction).map(call)
   }
   return api
 }
