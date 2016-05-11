@@ -26,7 +26,7 @@
   "homepage": "https://github.com/StephanHoyer/mithril-query",
   "devDependencies": {
     "expect": "1.20.2",
-    "mithril": "0.2.4",
+    "mithril": "git://github.com/lhorie/mithril.js.git#rewrite",
     "mocha": "3.1.2",
     "standard": "8.4.0"
   },
