@@ -27,7 +27,7 @@
   "devDependencies": {
     "expect": "1.18.0",
     "mithril": "0.2.4",
-    "mocha": "2.2.4",
+    "mocha": "2.5.1",
     "standard": "^7.1.1"
   },
   "dependencies": {
