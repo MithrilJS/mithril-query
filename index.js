@@ -205,6 +205,7 @@ function scan (render) {
       throw new Error('Wrong count of elements that matches "' + selector +
         '"\n  expected: >=' + minCount + '\n  actual: ' + actualCount)
     }
+    return true
   }
 
   function shouldHave (expectedCount, selector) {
@@ -219,16 +220,18 @@ function scan (render) {
       throw new Error('Wrong count of elements that matches "' + selector +
         '"\n  expected: ' + expectedCount + '\n  actual: ' + actualCount)
     }
+    return true
   }
 
   function shouldHaveCollection (selectors) {
     selectors.forEach(function (selector) {
       shouldHaveAtLeast(1, selector)
     })
+    return true
   }
 
   function shouldNotHave (selector) {
-    shouldHave(0, selector)
+    return shouldHave(0, selector)
   }
 
   function shouldContain (string) {
