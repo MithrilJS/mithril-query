@@ -19,8 +19,7 @@ In order to run tests in mithril 1.0 we need to do some setup. That is to mock t
 This can be done by requiring a 'setup' file in your 'mocha' tests with the following contents.
 
 ```   
-global.window = require('mithril/test-utils/domMock.js')()
-global.window = Object.assign(global.window, require('mithril/test-utils/pushStateMock')())
+global.window = Object.assign(require('mithril/test-utils/domMock.js')(), require('mithril/test-utils/pushStateMock')())
 ```
 
 Usage
