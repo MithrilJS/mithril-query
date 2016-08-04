@@ -6,6 +6,12 @@ var code = require('yields-keycode')
 
 var PD = '//'
 
+function copyObj (data) {
+  var output = {}
+  for (var i in data) output[i] = data[i]
+  return output
+}
+
 function identity (thing) {
   return thing
 }
@@ -97,9 +103,12 @@ function join (arrays) {
 
 function renderComponents (states, onremovers) {
   function renderComponent (component, treePath) {
-    if (!states[treePath] && component.tag.oninit) {
-      component.tag.oninit(component)
-      states[treePath] = component.state
+    if (!states[treePath]) {
+      component.state = copyObj(component.tag)
+      if (component.tag.oninit) {
+        component.tag.oninit(component)
+        states[treePath] = component.state
+      }
       if (component.tag.onremove) {
         onremovers.push(function () {
           component.tag.onremove(component)

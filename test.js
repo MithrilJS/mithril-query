@@ -481,6 +481,19 @@ describe('components', function () {
       out.should.have('.foo aside.firstRender')
     })
   })
+
+  describe('initialisation', function () {
+    it('should copy init args to state', function () {
+      const myComponent = {
+        label: 'foobar',
+        view: function (vnode) {
+          return m('div', vnode.state.label)
+        }
+      }
+      out = mq(myComponent)
+      out.should.contain('foobar')
+    })
+  })
 })
 
 describe('Logging', function () {
