@@ -508,3 +508,10 @@ describe('Logging', function () {
     out.log('span', logFn)
   })
 })
+
+describe('Elements with nested arrays', function () {
+  it('should flatten', function () {
+    mq(m('.foo', ['bar', [m('.baz')]])).should.have('.foo .baz')
+    mq(m('.foo', [[m('bar')]])).should.have('.foo bar')
+  })
+})

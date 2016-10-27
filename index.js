@@ -124,7 +124,7 @@ function scan (render) {
       if (!el.children || isString(el.children)) {
         return foundEls
       }
-      el.children.filter(identity).map(function (child) {
+      join(el.children).filter(identity).map(function (child) {
         if ((typeof child === 'string') || (typeof child === 'number')) {
           return
         }
