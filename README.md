@@ -11,6 +11,16 @@ Installation
 ------------
 
     npm install mithril-query --save-dev
+ 
+Setup
+-----
+
+In order to run tests in mithril 1.0 we need to do some setup. That is to mock the dom for the mithril render and request modules.
+This can be done by requiring a 'setup' file in your 'mocha' tests with the following contents.
+
+```   
+global.window = Object.assign(require('mithril/test-utils/domMock.js')(), require('mithril/test-utils/pushStateMock')())
+```
 
 Usage
 -----
