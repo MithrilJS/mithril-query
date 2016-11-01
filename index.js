@@ -264,7 +264,7 @@ function scan (render) {
       options = options || {}
       var keyCode = isString(key) ? code(key) : key
       fire(selector, {
-        target: {value: options.value},
+        target: options.target || {value: options.value},
         altKey: !!options.altKey,
         shiftKey: !!options.shiftKey,
         ctrlKey: !!options.ctrlKey,
