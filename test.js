@@ -6,6 +6,7 @@ var mTrust = require('mithril/render/trust')
 var mq = require('./')
 var keyCode = require('yields-keycode')
 var expect = require('expect')
+var assert = require('assert')
 
 function noop () {}
 
@@ -492,6 +493,26 @@ describe('components', function () {
       }
       out = mq(myComponent)
       out.should.contain('foobar')
+    })
+
+    it('should initialize all nested components', function () {
+      var oninit = 0
+      var view = 0
+
+      var component = {
+        oninit: function () {
+          oninit++
+        },
+        view: function (vnode) {
+          view++
+          return m('i', vnode.children)
+        }
+      }
+
+      mq(m(component, m(component, m(component))))
+
+      assert.equal(oninit, 3)
+      assert.equal(view, 3)
     })
   })
 })
