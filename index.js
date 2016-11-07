@@ -118,7 +118,9 @@ function renderComponents (states, onremovers) {
       component.state = states[treePath]
     }
     var node = component.tag.view(component)
-    node.parent = component.parent
+    if (node) {
+      node.parent = component.parent
+    }
     return node
   }
 

@@ -496,10 +496,10 @@ describe('components', function () {
     })
 
     it('should initialize all nested components', function () {
-      var oninit = 0
-      var view = 0
+      let oninit = 0
+      let view = 0
 
-      var component = {
+      const myComponent = {
         oninit: function () {
           oninit++
         },
@@ -509,10 +509,19 @@ describe('components', function () {
         }
       }
 
-      mq(m(component, m(component, m(component))))
+      mq(m(myComponent, m(myComponent, m(myComponent))))
 
       assert.equal(oninit, 3)
       assert.equal(view, 3)
+    })
+
+    it('should ignore components that returns null', function () {
+      const nullComponent = {
+        view: function () {
+          return null
+        }
+      }
+      mq(m(nullComponent, m(myComponent))).should.not.have('aside.firstRender')
     })
   })
 })
