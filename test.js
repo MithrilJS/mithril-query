@@ -6,7 +6,6 @@ var mTrust = require('mithril/render/trust')
 var mq = require('./')
 var keyCode = require('yields-keycode')
 var expect = require('expect')
-var assert = require('assert')
 
 function noop () {}
 
@@ -511,8 +510,8 @@ describe('components', function () {
 
       mq(m(myComponent, m(myComponent, m(myComponent))))
 
-      assert.equal(oninit, 3)
-      assert.equal(view, 3)
+      expect(oninit).toBe(3)
+      expect(view).toBe(3)
     })
 
     it('should ignore components that returns null', function () {
