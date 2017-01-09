@@ -493,6 +493,35 @@ describe('components', function () {
       out = mq(myComponent)
       out.should.contain('foobar')
     })
+
+    it('should initialize all nested components', function () {
+      let oninit = 0
+      let view = 0
+
+      const myComponent = {
+        oninit: function () {
+          oninit++
+        },
+        view: function (vnode) {
+          view++
+          return m('i', vnode.children)
+        }
+      }
+
+      mq(m(myComponent, m(myComponent, m(myComponent))))
+
+      expect(oninit).toBe(3)
+      expect(view).toBe(3)
+    })
+
+    it('should ignore components that returns null', function () {
+      const nullComponent = {
+        view: function () {
+          return null
+        }
+      }
+      mq(m(nullComponent, m(myComponent))).should.not.have('aside.firstRender')
+    })
   })
 })
 
