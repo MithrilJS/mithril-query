@@ -11,14 +11,14 @@ Installation
 ------------
 
     npm install mithril-query --save-dev
- 
+
 Setup
 -----
 
 In order to run tests in mithril 1.0 we need to do some setup. That is to mock the dom for the mithril render and request modules.
 This can be done by requiring a 'setup' file in your 'mocha' tests with the following contents.
 
-```   
+```
 global.window = Object.assign(require('mithril/test-utils/domMock.js')(), require('mithril/test-utils/pushStateMock')())
 ```
 
@@ -29,7 +29,7 @@ You can run this tests serverside or use browserify and run them in browsers.
 
 ```javascript
 // simple module: simple.js
-var m = require('Mithril')
+var m = require('mithril')
 
 module.exports = {
   view: function () {
@@ -44,28 +44,27 @@ module.exports = {
 
 ```javascript
 // test for simple module: simple.test.js
-var test = require('tape').test
+/* eslint-env mocha */
+global.window = Object.assign(require('mithril/test-utils/domMock.js')(), require('mithril/test-utils/pushStateMock')())
 var simpleModule = require('./simple')
 var mq = require('mithril-query')
 
-test('simple module', function (t) {
-  t.test('view', function (t) {
-    t.equal(typeof simple.view, 'function', 'should be a function')
+describe('simple module', function () {
+  it('should generate appropriate output', function () {
     var output = mq(simpleModule)
-    t.ok(output.has('span'), 'should create span node')
-    t.ok(output.has('div > span'), 'child selectors \o/')
-    t.ok(output.has('#fooId'), 'should create fooId node')
-    t.ok(output.has('.barClass'), 'should create barClass node')
-    t.ok(output.has(':contains(barContent)'), 'should create node with content barContent')
-    t.ok(output.contains('barContent'), 'should create node with content barContent')
-    t.end()
+    output.should.have('span')
+    output.should.have('div > span')
+    output.should.have('#fooId')
+    output.should.have('.barClass')
+    output.should.have(':contains(barContent)')
+    output.should.contain('barContent')
   })
 })
 ```
 
 Run the test with
 
-    tape simple.test.js
+    mocha simple.test.js
 
 API
 ---

@@ -1,9 +1,7 @@
-// simple module: simple.js
-var m = require('Mithril')
+var m = require('mithril')
 
 module.exports = {
-  controller: function () {},
-  view: function (ctrl) {
+  view: function () {
     return m('div', [
       m('span', 'spanContent'),
       m('#fooId', 'fooContent'),
