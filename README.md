@@ -169,7 +169,7 @@ Example:
     oninit: function (vnode) {
       vnode.state = {
         visible: true,
-        toggleMe: function () { scope.visible = !scope.visible }
+        toggleMe: function () { vnode.state.visible = !vnode.state.visible }
       }
     },
     view: function (vnode) {
