@@ -69,7 +69,9 @@ Run the test with
 API
 ---
 
-First call the view result with the `mithril-query` function. Then the result has the following methods:
+First call the view result with the `mithril-query` function. You can pass an object as the second argument to `mq` and your component will be instantiated with this object.
+
+Then the result has the following methods:
 
 ### first(selector)
 
