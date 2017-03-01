@@ -17,7 +17,7 @@ describe('mithril query', function () {
     var msxOutput
 
     beforeEach(function () {
-      tagEl = m('span')
+      tagEl = m('span', 123)
       concatClassEl = m('.onetwo')
       classEl = m('.one.two')
       idEl = m('#two')
@@ -46,6 +46,7 @@ describe('mithril query', function () {
       expect(out.first('.three#three')).toEqual(idClassEl)
       expect(out.first(':contains(DEVIL)')).toEqual(devilEl)
       expect(out.first('#arrayArray')).toEqual(arrayOfArrays)
+      expect(out.first(':contains(123)')).toEqual(tagEl)
       expect(out.first(':contains(Inner String)').attrs.className).toEqual('root')
       out.should.have('.contentAsArray :contains(123foobar)')
       expect(out.first('[disabled=]')).toEqual(disabled)

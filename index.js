@@ -68,9 +68,9 @@ var language = cssauron({
   contents: function (node) {
     var content = node.text || ''
     if (isStringOrNumber(node.children)) {
-      return content + node.children
+      return '' + content + node.children
     }
-    return content + getContent(node.renderedChildren)
+    return '' + content + getContent(node.renderedChildren)
   },
   id: function (node) {
     if (node.attrs) {
