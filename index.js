@@ -66,7 +66,7 @@ function call (thing) {
 var language = cssauron({
   tag: 'tag',
   contents: function (node) {
-    var content = node.text || ''
+    var content = node.text == null ? '' : ('' + node.text)
     if (isStringOrNumber(node.children)) {
       return '' + content + node.children
     }
