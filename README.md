@@ -246,6 +246,10 @@ If you need to access the rendered root element you can simply access it with
 out.rootNode
 ```
 
+### `onremove` handling
+
+To trigger `onremove`-handlers of all initialised components, just call `out.onremove()`
+
 Selectors
 ---------
 
