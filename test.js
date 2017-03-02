@@ -49,7 +49,7 @@ describe('mithril query', function () {
       expect(out.first(':contains(123)')).toEqual(tagEl)
       expect(out.first(':contains(Inner String)').attrs.className).toEqual('root')
       out.should.have('.contentAsArray :contains(123foobar)')
-      expect(out.first('[disabled=]')).toEqual(disabled)
+      expect(out.first('[disabled]')).toEqual(disabled)
       expect(out.first('[data-foo=bar]')).toEqual(dataAttr)
       expect(out.find('[data-foo=no]')).toEqual([])
     })
@@ -272,7 +272,7 @@ describe('autorender', function () {
           m('option', {value: 'foo', selected: true})
         ])
       })
-      out.should.have('option[selected=]')
+      out.should.have('option[selected]')
     })
   })
 

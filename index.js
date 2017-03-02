@@ -90,7 +90,7 @@ var language = cssauron({
   },
   attr: function (node, attr) {
     if (node.attrs) {
-      return node.attrs[attr] === true ? '' : node.attrs[attr]
+      return node.attrs[attr]
     }
   }
 })
