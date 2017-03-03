@@ -133,6 +133,7 @@ var el = [
     onclick: onClickOfEventEl,
     onfocus: onFocusOfEventEl,
   })
+ ]
 
 mq(el).click('#eventEl') // triggers onClickOfEventEl
 mq(el).focus('#eventEl') // triggers onFocusOfEventEl
