@@ -114,6 +114,9 @@ function renderComponents (states, onremovers) {
           component.tag.onremove(component)
         })
       }
+      if (component.tag._captureVnode) {
+        component.tag._captureVnode(component)
+      }
     } else {
       component.state = states[treePath]
     }
@@ -150,7 +153,7 @@ function scan (render) {
   var api = {
     onremovers: onremovers,
     redraw: function () {
-      api.rootNode = renderNode(render(), 'ROOT')
+      api.rootNode = renderNode(render(api), 'ROOT')
     }
   }
   api.redraw()
@@ -343,7 +346,10 @@ function init (viewOrComponentOrRootNode, nodeOrAttrs) {
       return viewOrComponentOrRootNode(nodeOrAttrs)
     })
   } else if (isComponent(viewOrComponentOrRootNode)) {
-    api = scan(function () {
+    api = scan(function (api) {
+      viewOrComponentOrRootNode._captureVnode = function (vnode) {
+        api.vnode = vnode
+      }
       return m(viewOrComponentOrRootNode, nodeOrAttrs)
     })
   } else {

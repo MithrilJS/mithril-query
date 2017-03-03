@@ -543,3 +543,15 @@ describe('Elements with nested arrays', function () {
     mq(m('.foo', [[m('bar')]])).should.have('.foo bar')
   })
 })
+
+describe('Exposing vnode', function () {
+  it('should expose vnode of root component', function () {
+    var myComponent = {
+      view: function (vnode) {
+        vnode.state.baz = 'foz'
+      }
+    }
+    var out = mq(myComponent)
+    expect(out.vnode.state.baz).toEqual('foz')
+  })
+})
