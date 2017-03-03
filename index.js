@@ -276,7 +276,8 @@ function scan (render) {
     return function (selector, event, silent) {
       var attrs = first(selector).attrs
       attrs[eventName](event)
-      (event && event.redraw === false) || silent || api.redraw()
+      silent = silent || (event && event.redraw === false)
+      silent || api.redraw()
     }
   }
 
