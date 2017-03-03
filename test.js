@@ -66,7 +66,7 @@ describe('mithril query', function () {
         onclick: function (evt) { events.onclick(evt) },
         onfocus: function (evt) { events.onfocus(evt) },
         oninput: function (evt) { events.oninput(evt) },
-        onthing: function (evt) { events.onthing(evt) }
+        myCustomEvent: function (evt) { events.myCustomEvent(evt) }
       })
       out = mq(m('.root', eventEl))
     })
@@ -95,11 +95,11 @@ describe('mithril query', function () {
     })
 
     it('should allow sending custom events', function (done) {
-      events.onthing = function (event) {
+      events.myCustomEvent = function (event) {
         expect(event).toBe('pop')
         done()
       }
-      out.trigger('#eventEl', 'thing', 'pop')
+      out.trigger('#eventEl', 'myCustomEvent', 'pop')
     })
   })
 

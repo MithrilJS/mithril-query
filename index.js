@@ -275,13 +275,13 @@ function scan (render) {
   function trigger (eventName) {
     return function (selector, event, silent) {
       var attrs = first(selector).attrs
-      attrs['on' + eventName](event)
-      silent || api.redraw()
+      attrs[eventName](event)
+      (event && event.redraw === false) || silent || api.redraw()
     }
   }
 
   function triggerKey (eventName) {
-    var fire = trigger(eventName)
+    var fire = trigger('on' + eventName)
     return function handleEvent (selector, key, options) {
       options = options || {}
       var keyCode = isString(key) ? code(key) : key
@@ -311,8 +311,9 @@ function scan (render) {
   }
   api.setValue = setValue
   ;['focus', 'click', 'blur', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'].map(function (eventName) {
-    api[eventName] = trigger(eventName)
+    api[eventName] = trigger('on' + eventName)
   })
+  api.contextMenu = trigger('contextmenu')
   api.keydown = triggerKey('keydown')
   api.keypress = triggerKey('keypress')
   api.keyup = triggerKey('keyup')
