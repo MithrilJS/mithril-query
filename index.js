@@ -16,6 +16,10 @@ function identity (thing) {
   return thing
 }
 
+function isBoolean (thing) {
+  return typeof thing === 'boolean'
+}
+
 function isString (thing) {
   return Object.prototype.toString.call(thing) === '[object String]'
 }
@@ -67,7 +71,7 @@ var language = cssauron({
   tag: 'tag',
   contents: function (node) {
     var content = node.text == null ? '' : ('' + node.text)
-    if (isStringOrNumber(node.children)) {
+    if (isStringOrNumber(node.children) || isBoolean(node.children)) {
       return '' + content + node.children
     }
     return '' + content + getContent(node.renderedChildren)
@@ -176,7 +180,7 @@ function scan (render) {
       if (matchesSelector(node)) {
         foundNodes.push(node)
       }
-      if (!node.children || isStringOrNumber(node.children)) {
+      if (isBoolean(node.children) || isStringOrNumber(node.children) || !node.children) {
         return foundNodes
       }
       node.renderedChildren.filter(identity).map(function (child) {

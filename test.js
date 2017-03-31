@@ -11,7 +11,7 @@ function noop () {}
 
 describe('mithril query', function () {
   describe('basic selection of things', function () {
-    var el, out, tagEl, concatClassEl, classEl, idEl, innerString, dataAttr
+    var el, out, tagEl, concatClassEl, classEl, idEl, innerString, dataAttr, booleanEl
     var devilEl, idClassEl, arrayOfArrays, rawHtml, numbah, disabled
     var contentAsArray
     var msxOutput
@@ -30,9 +30,10 @@ describe('mithril query', function () {
       contentAsArray = m('.contentAsArray', m('.inner', [123, 'foobar']))
       rawHtml = mTrust('<div class="trusted"></div>')
       numbah = 10
+      booleanEl = m('span', true)
       el = m('.root', [tagEl, concatClassEl, classEl, innerString, idEl,
         devilEl, idClassEl, [[arrayOfArrays]], undefined, dataAttr,
-        numbah, rawHtml, disabled, msxOutput, contentAsArray])
+        numbah, booleanEl, rawHtml, disabled, msxOutput, contentAsArray])
       out = mq(el)
     })
 
@@ -47,6 +48,7 @@ describe('mithril query', function () {
       expect(out.first(':contains(DEVIL)')).toEqual(devilEl)
       expect(out.first('#arrayArray')).toEqual(arrayOfArrays)
       expect(out.first(':contains(123)')).toEqual(tagEl)
+      expect(out.first(':contains(true)')).toEqual(booleanEl)
       expect(out.first(':contains(Inner String)').attrs.className).toEqual('root')
       out.should.have('.contentAsArray :contains(123foobar)')
       expect(out.first('[disabled]')).toEqual(disabled)
