@@ -112,6 +112,11 @@ describe('mithril query', function () {
       expect(out.contains(123)).toBe(true)
     })
 
+    it('should return false if the content was not found', function () {
+      var out = mq(m('.containstest', ['Inner String', null, 123]))
+      expect(out.contains('Non Existent Inner String')).toBe(false)
+    })
+
     describe('trusted content', function () {
       it('should allow to select by content', function () {
         var out = mq(m('.containstest', [mTrust('<p>Trusted String</p>'), 'Inner String']))

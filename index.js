@@ -214,7 +214,7 @@ function scan (render) {
   }
 
   function contains (value, node) {
-    return !!first(':contains(' + value + ')', node)
+    return !!find(':contains(' + value + ')', node).length
   }
 
   function shouldHaveAtLeast (minCount, selector) {
@@ -256,12 +256,9 @@ function scan (render) {
   }
 
   function shouldNotContain (string) {
-    try {
-      contains(string, api.rootNode)
-    } catch (e) {
-      return true
+    if (contains(string, api.rootNode)) {
+      throw new Error('Unexpected "' + string + '" found!')
     }
-    throw new Error('Unexpected "' + string + '" found!')
   }
 
   function setValue (selector, string, silent) {
