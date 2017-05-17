@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:MithrilJs/mithril-query.git"
+    "url": "git@github.com:MithrilJS/mithril-query.git"
   },
   "keywords": [
     "mithril",
@@ -21,9 +21,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MithrilJs/mithril-query/issues"
+    "url": "https://github.com/MithrilJS/mithril-query/issues"
   },
-  "homepage": "https://github.com/MithrilJs/mithril-query",
+  "homepage": "https://github.com/MithrilJS/mithril-query",
   "devDependencies": {
     "expect": "1.20.2",
     "mithril": "1.1.1",
