@@ -373,13 +373,13 @@ describe('components', function () {
           firstRender: true
         }
       },
+      onupdate: function (node) {
+        node.state.firstRender = false
+      },
       view: function (node) {
-        var tag = 'aside'
-        if (node.state.firstRender) {
-          tag += '.firstRender'
-          node.state.firstRender = false
-        }
-        return m(tag, [
+        return m('aside', {
+          className: node.state.firstRender ? 'firstRender' : ''
+        }, [
           node.attrs.data,
           'hello',
           node.state.foo

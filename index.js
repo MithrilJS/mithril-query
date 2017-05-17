@@ -123,6 +123,9 @@ function renderComponents (states, onremovers) {
       }
     } else {
       component.state = states[treePath]
+      if (component.tag.onupdate) {
+        component.tag.onupdate(component)
+      }
     }
     var node = component.tag.view(component)
     if (node) {
