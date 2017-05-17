@@ -417,6 +417,28 @@ describe('components', function () {
     })
   })
 
+  describe('closure components', function () {
+    function closureComponent (vnode) {
+      return {
+        view: function () {
+          return m('div', 'Hello from ' + vnode.attrs.name)
+        }
+      }
+    }
+
+    // this dow not work currently since it needs a breaking change
+    // because mq now thinks this is a view function.
+    it.skip('should support it as arguments', function () {
+      out = mq(closureComponent, { name: 'Homer' })
+      out.should.have('div:contains(Hello from Homer)')
+    })
+
+    it('should support it if embedded', function () {
+      out = mq(m('aside', m(closureComponent, { name: 'Homer' })))
+      out.should.have('div:contains(Hello from Homer)')
+    })
+  })
+
   describe('embedded components', function () {
     it('should work without args', function () {
       out = mq(m('div', m({

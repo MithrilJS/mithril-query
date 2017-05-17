@@ -56,10 +56,10 @@ function isArray (thing) {
 }
 
 function isComponent (thing) {
-  return thing && typeof thing === 'object' && thing.view
+  return thing && (typeof thing === 'object' && thing.view) || isFunction(thing)
 }
 
-function isFuction (thing) {
+function isFunction (thing) {
   return typeof thing === 'function'
 }
 
@@ -127,7 +127,12 @@ function renderComponents (states, onremovers) {
         component.tag.onupdate(component)
       }
     }
-    var node = component.tag.view(component)
+    var node
+    if (component.tag.view) {
+      node = component.tag.view(component)
+    } if (isFunction(component.tag)) {
+      node = component.tag(component).view(component)
+    }
     if (node) {
       node.parent = component.parent
     }
@@ -346,8 +351,9 @@ function scan (render) {
 
 function init (viewOrComponentOrRootNode, nodeOrAttrs) {
   var api = {}
-  var isViewFunction = typeof viewOrComponentOrRootNode === 'function'
+  var isViewFunction = isFunction(viewOrComponentOrRootNode)
   if (isViewFunction) {
+    console.warn('Using a view function as first argument is deprecated in order to support closure components. Please use object notation (`{ view: () => viewFunction(arg) }`).')
     api = scan(function () {
       return viewOrComponentOrRootNode(nodeOrAttrs)
     })
@@ -365,7 +371,7 @@ function init (viewOrComponentOrRootNode, nodeOrAttrs) {
     })
   }
   api.onremove = function () {
-    api.onremovers.filter(isFuction).map(call)
+    api.onremovers.filter(isFunction).map(call)
   }
   return api
 }
