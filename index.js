@@ -56,11 +56,15 @@ function isArray (thing) {
 }
 
 function isComponent (thing) {
-  return thing && (typeof thing === 'object' && thing.view) || isFunction(thing)
+  return thing && (typeof thing === 'object' && thing.view) || isFunction(thing) || isClass(thing)
 }
 
 function isFunction (thing) {
-  return typeof thing === 'function'
+  return typeof thing === 'function' && !isClass(thing)
+}
+
+function isClass (thing) {
+  return typeof thing === 'function' && /^\s*class\s+/.test(thing.toString())
 }
 
 function call (thing) {
@@ -108,7 +112,13 @@ function join (arrays) {
 function renderComponents (states, onremovers) {
   function renderComponent (component, treePath) {
     if (!states[treePath]) {
-      component.state = copyObj(component.tag)
+      if (isClass(component.tag)) {
+        var Component = component.tag
+        component.state = new Component(component)
+        states[treePath] = component.state
+      } else {
+        component.state = copyObj(component.tag)
+      }
       if (component.tag.oninit) {
         component.tag.oninit(component)
         states[treePath] = component.state
@@ -132,6 +142,8 @@ function renderComponents (states, onremovers) {
       node = component.tag.view(component)
     } if (isFunction(component.tag)) {
       node = component.tag(component).view(component)
+    } else if (isClass(component.tag)) {
+      node = component.state.view(component)
     }
     if (node) {
       node.parent = component.parent
