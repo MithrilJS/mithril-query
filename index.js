@@ -119,22 +119,22 @@ function renderComponents (states, onremovers) {
       } else {
         component.state = copyObj(component.tag)
       }
-      if (component.tag.oninit) {
-        component.tag.oninit(component)
+      if (component.state.oninit) {
+        component.state.oninit(component)
         states[treePath] = component.state
       }
-      if (component.tag.onremove) {
+      if (component.state.onremove) {
         onremovers.push(function () {
-          component.tag.onremove(component)
+          component.state.onremove(component)
         })
       }
-      if (component.tag._captureVnode) {
-        component.tag._captureVnode(component)
+      if (component.state._captureVnode) {
+        component.state._captureVnode(component)
       }
     } else {
       component.state = states[treePath]
-      if (component.tag.onupdate) {
-        component.tag.onupdate(component)
+      if (component.state.onupdate) {
+        component.state.onupdate(component)
       }
     }
     var node
