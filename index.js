@@ -128,8 +128,8 @@ function renderComponents (states, onremovers) {
           component.state.onremove(component)
         })
       }
-      if (component.state._captureVnode) {
-        component.state._captureVnode(component)
+      if (component.tag._captureVnode) {
+        component.tag._captureVnode(component)
       }
     } else {
       component.state = states[treePath]
