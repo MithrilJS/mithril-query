@@ -584,3 +584,11 @@ describe('Exposing vnode', function () {
     expect(out.vnode.state.baz).toEqual('foz')
   })
 })
+
+describe(':contains selector', function () {
+  it('should correctly find elements', function () {
+    var out = mq(m('div', m('.button', 'foo')))
+    expect(mq(out.first('.button')).should.contain('foo')).toBe(true)
+    expect(out.should.have('.button :contains(foo)')).toBe(true)
+  })
+})
