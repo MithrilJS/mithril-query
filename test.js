@@ -139,6 +139,7 @@ describe('should style assertions', function () {
   })
 
   it('should not throw when as expected', function () {
+    expect(out.should.have('span')).toBe(true)
     expect(function () {
       out.should.have('span')
     }).toNotThrow()
