@@ -53,7 +53,7 @@ describe('simple module', function () {
     output.should.have('div > span')
     output.should.have('#fooId')
     output.should.have('.barClass')
-    output.should.have(':contains(barContent)')
+    output.should.have('.barClass:contains(barContent)')
     output.should.contain('barContent')
   })
 })
