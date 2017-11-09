@@ -7,9 +7,7 @@ var code = require('yields-keycode')
 var PD = '//'
 
 function copyObj (data) {
-  var output = {}
-  for (var i in data) output[i] = data[i]
-  return output
+  return Object.assign({}, data)
 }
 
 function identity (thing) {
@@ -111,30 +109,30 @@ function join (arrays) {
 
 function renderComponents (states, onremovers) {
   function renderComponent (component, treePath) {
+    if (isClass(component.tag)) {
+      var Component = component.tag
+      component.instance = new Component(component)
+    } else {
+      component.instance = copyObj(component.tag)
+    }
     if (!states[treePath]) {
-      if (isClass(component.tag)) {
-        var Component = component.tag
-        component.state = new Component(component)
-        states[treePath] = component.state
-      } else {
-        component.state = copyObj(component.tag)
-      }
-      if (component.state.oninit) {
-        component.state.oninit(component)
+      component.state = component.instance
+      if (component.instance.oninit) {
+        component.instance.oninit(component)
         states[treePath] = component.state
       }
-      if (component.state.onremove) {
+      if (component.instance.onremove) {
         onremovers.push(function () {
-          component.state.onremove(component)
+          component.instance.onremove(component)
         })
       }
-      if (component.tag._captureVnode) {
-        component.tag._captureVnode(component)
+      if (component.instance._captureVnode) {
+        component.instance._captureVnode(component)
       }
     } else {
       component.state = states[treePath]
-      if (component.state.onupdate) {
-        component.state.onupdate(component)
+      if (component.instance.onupdate) {
+        component.instance.onupdate(component)
       }
     }
     var node
@@ -143,7 +141,7 @@ function renderComponents (states, onremovers) {
     } if (isFunction(component.tag)) {
       node = component.tag(component).view(component)
     } else if (isClass(component.tag)) {
-      node = component.state.view(component)
+      node = component.instance.view(component)
     }
     if (node) {
       node.parent = component.parent
