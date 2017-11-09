@@ -439,6 +439,46 @@ describe('components', function () {
     })
   })
 
+  describe('es6 components', function () {
+    class ES6Component {
+      view (vnode) {
+        return m('div', 'Hello from ' + vnode.attrs.name)
+      }
+    }
+
+    // this dow not work currently since it needs a breaking change
+    // because mq now thinks this is a view function.
+    it.skip('should support it as arguments', function () {
+      out = mq(ES6Component, { name: 'Homer' })
+      out.should.have('div:contains(Hello from Homer)')
+    })
+
+    it('should support it if embedded', function () {
+      out = mq(m('aside', m(ES6Component, { name: 'Homer' })))
+      out.should.have('div:contains(Hello from Homer)')
+    })
+  })
+
+  describe('es6 instantiated component', function () {
+    class ES6Component {
+      view (vnode) {
+        return m('div', 'Hello from ' + vnode.attrs.name)
+      }
+    }
+
+    // this dow not work currently since it needs a breaking change
+    // because mq now thinks this is a view function.
+    it.skip('should support it as arguments', function () {
+      out = mq(new ES6Component(), { name: 'Homer' })
+      out.should.have('div:contains(Hello from Homer)')
+    })
+
+    it('should support it if embedded', function () {
+      out = mq(m('aside', m(new ES6Component(), { name: 'Homer' })))
+      out.should.have('div:contains(Hello from Homer)')
+    })
+  })
+
   describe('embedded components', function () {
     it('should work without args', function () {
       out = mq(m('div', m({
