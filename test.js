@@ -364,7 +364,7 @@ describe('onremove', function () {
 })
 
 describe('components', function () {
-  var out, myComponent
+  var out, myComponent, ES6Component
 
   beforeEach(function () {
     myComponent = {
@@ -383,6 +383,28 @@ describe('components', function () {
         }, [
           node.attrs.data,
           'hello',
+          node.state.foo
+        ])
+      }
+    }
+
+    ES6Component = class {
+      oninit (node) {
+        this.hello = 'hello'
+        node.state = {
+          foo: node.attrs.data || 'bar',
+          firstRender: true
+        }
+      }
+      onupdate (node) {
+        node.state.firstRender = false
+      }
+      view (node) {
+        return m('aside', {
+          className: node.state.firstRender ? 'firstRender' : ''
+        }, [
+          node.attrs.data,
+          this.hello,
           node.state.foo
         ])
       }
@@ -441,42 +463,62 @@ describe('components', function () {
   })
 
   describe('es6 components', function () {
-    class ES6Component {
-      view (vnode) {
-        return m('div', 'Hello from ' + vnode.attrs.name)
-      }
-    }
+    it('should work without args', function () {
+      out = mq(ES6Component)
+      out.should.have('aside')
+      out.should.contain('hello')
+    })
 
-    // this dow not work currently since it needs a breaking change
-    // because mq now thinks this is a view function.
-    it.skip('should support it as arguments', function () {
-      out = mq(ES6Component, { name: 'Homer' })
+    it('should work with directly injected components', function () {
+      out = mq(ES6Component, {data: 'my super data'})
+      out.should.have('aside')
+      out.should.contain('my super data')
+    })
+
+    it('should work without oninit', function () {
+      class SimpleES6Component {
+        view (vnode) {
+          return m('div', 'Hello from ' + vnode.attrs.name)
+        }
+      }
+      out = mq(SimpleES6Component, { name: 'Homer' })
       out.should.have('div:contains(Hello from Homer)')
     })
 
-    it('should support it if embedded', function () {
-      out = mq(m('aside', m(ES6Component, { name: 'Homer' })))
-      out.should.have('div:contains(Hello from Homer)')
+    it('should call onremove on globalonremove', function (done) {
+      ES6Component.prototype.onremove = function () { done() }
+      var out = mq(ES6Component)
+      out.onremove()
     })
   })
 
   describe('es6 instantiated component', function () {
-    class ES6Component {
-      view (vnode) {
-        return m('div', 'Hello from ' + vnode.attrs.name)
-      }
-    }
+    it('should work without args', function () {
+      out = mq(new ES6Component())
+      out.should.have('aside')
+      out.should.contain('hello')
+    })
 
-    // this dow not work currently since it needs a breaking change
-    // because mq now thinks this is a view function.
-    it.skip('should support it as arguments', function () {
-      out = mq(new ES6Component(), { name: 'Homer' })
+    it('should work with directly injected components', function () {
+      out = mq(new ES6Component(), {data: 'my super data'})
+      out.should.have('aside')
+      out.should.contain('my super data')
+    })
+
+    it('should work without oninit', function () {
+      class SimpleES6Component {
+        view (vnode) {
+          return m('div', 'Hello from ' + vnode.attrs.name)
+        }
+      }
+      out = mq(new SimpleES6Component(), { name: 'Homer' })
       out.should.have('div:contains(Hello from Homer)')
     })
 
-    it('should support it if embedded', function () {
-      out = mq(m('aside', m(new ES6Component(), { name: 'Homer' })))
-      out.should.have('div:contains(Hello from Homer)')
+    it('should call onremove on globalonremove', function (done) {
+      ES6Component.prototype.onremove = function () { done() }
+      var out = mq(new ES6Component())
+      out.onremove()
     })
   })
 

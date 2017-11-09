@@ -7,7 +7,7 @@ var code = require('yields-keycode')
 var PD = '//'
 
 function copyObj (data) {
-  return Object.assign({}, data)
+  return Object.assign(Object.create(Object.getPrototypeOf(data)), data)
 }
 
 function identity (thing) {
@@ -110,7 +110,9 @@ function join (arrays) {
 function renderComponents (states, instances, onremovers) {
   function renderComponent (component, treePath) {
     if (!instances[treePath]) {
-      if (isClass(component.tag)) {
+      if (isFunction(component.tag)) {
+        component.instance = component.tag(component)
+      } else if (isClass(component.tag)) {
         var Component = component.tag
         component.instance = new Component(component)
       } else {
@@ -140,14 +142,8 @@ function renderComponents (states, instances, onremovers) {
         component.instance.onupdate(component)
       }
     }
-    var node
-    if (component.tag.view) {
-      node = component.tag.view(component)
-    } if (isFunction(component.tag)) {
-      node = component.tag(component).view(component)
-    } else if (isClass(component.tag)) {
-      node = component.instance.view(component)
-    }
+    var node = component.instance.view(component)
+
     if (node) {
       node.parent = component.parent
     }
