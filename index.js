@@ -107,13 +107,18 @@ function join (arrays) {
   }, [])
 }
 
-function renderComponents (states, onremovers) {
+function renderComponents (states, instances, onremovers) {
   function renderComponent (component, treePath) {
-    if (isClass(component.tag)) {
-      var Component = component.tag
-      component.instance = new Component(component)
+    if (!instances[treePath]) {
+      if (isClass(component.tag)) {
+        var Component = component.tag
+        component.instance = new Component(component)
+      } else {
+        component.instance = copyObj(component.tag)
+      }
+      instances[treePath] = component.instance
     } else {
-      component.instance = copyObj(component.tag)
+      component.instance = instances[treePath]
     }
     if (!states[treePath]) {
       component.state = component.instance
@@ -170,8 +175,9 @@ function renderComponents (states, onremovers) {
 
 function scan (render) {
   var states = {}
+  var instances = {}
   var onremovers = []
-  var renderNode = renderComponents(states, onremovers)
+  var renderNode = renderComponents(states, instances, onremovers)
   var api = {
     onremovers: onremovers,
     redraw: function () {
