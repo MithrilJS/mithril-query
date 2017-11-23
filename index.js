@@ -130,7 +130,10 @@ function renderComponents (states, onremovers) {
     var node
     if (component.tag.view) {
       node = component.tag.view(component)
-    } if (isFunction(component.tag)) {
+    }
+    if (component.tag.prototype != null && typeof component.tag.prototype.view === 'function') {
+      node = (new component.tag(component)).view(component) // eslint-disable-line new-cap
+    } else if (isFunction(component.tag)) {
       node = component.tag(component).view(component)
     }
     if (node) {

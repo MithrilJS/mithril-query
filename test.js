@@ -585,3 +585,15 @@ describe('Exposing vnode', function () {
     expect(out.vnode.state.baz).toEqual('foz')
   })
 })
+
+describe('Components created with ES6 Classes', function () {
+  it('should call component view method', function () {
+    class Foo {
+      view () {
+        return m('.bar')
+      }
+    }
+
+    mq(m('.foo', m(Foo))).should.have('.foo .bar')
+  })
+})
