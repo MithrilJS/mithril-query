@@ -555,9 +555,103 @@ describe('components', function () {
     })
   })
 
+  describe('embedded es6 components', function () {
+    it('should work without args', function () {
+      out = mq(class {
+        view () {
+          return m(class {
+            view () {
+              return m('strong', 'bar')
+            }
+          })
+        }
+      })
+      out.should.have('strong')
+      out.should.contain('bar')
+    })
+
+    it('should work with args', function () {
+      out = mq(m('span', m(ES6Component, { data: 'test-data' })))
+      out.should.have('aside')
+      out.should.contain('test-data')
+    })
+
+    it('should work without oninit', function () {
+      class SimpleES6Component {
+        view (vnode) {
+          return m('span', vnode.attrs.data)
+        }
+      }
+      out = mq(m('div', m(SimpleES6Component, { data: 'mega' })))
+      out.should.have('span')
+      out.should.contain('mega')
+    })
+
+    it('should call onremove on globalonremove', function (done) {
+      ES6Component.prototype.onremove = function () { done() }
+      out = mq(m('span', m(ES6Component)))
+      out.onremove()
+    })
+  })
+
+  describe('embedded es6 instantiated components', function () {
+    it('should work without args', function () {
+      class C1 {
+        view () {
+          return m('strong', 'bar')
+        }
+      }
+      class C2 {
+        view () {
+          return m(C1)
+        }
+      }
+      out = mq(new C2())
+      out.should.have('strong')
+      out.should.contain('bar')
+    })
+
+    it('should work with args', function () {
+      out = mq(m('span', m(new ES6Component(), { data: 'test-data' })))
+      out.should.have('aside')
+      out.should.contain('test-data')
+    })
+
+    it('should work without oninit', function () {
+      class SimpleES6Component {
+        view (vnode) {
+          return m('span', vnode.attrs.data)
+        }
+      }
+      out = mq(m('div', m(new SimpleES6Component(), { data: 'mega' })))
+      out.should.have('span')
+      out.should.contain('mega')
+    })
+
+    it('should call onremove on globalonremove', function (done) {
+      ES6Component.prototype.onremove = function () { done() }
+      out = mq(m('span', m(new ES6Component())))
+      out.onremove()
+    })
+  })
+
   describe('state', function () {
     it('should preserve components state', function () {
       out = mq(m('div', m(myComponent, 'haha')))
+      out.should.have('aside.firstRender')
+      out.redraw()
+      out.should.not.have('aside.firstRender')
+    })
+
+    it('should preserve es6 component state', function () {
+      out = mq(m('div', m(ES6Component, 'haha')))
+      out.should.have('aside.firstRender')
+      out.redraw()
+      out.should.not.have('aside.firstRender')
+    })
+
+    it('should preserve es6 instantiated component state', function () {
+      out = mq(m('div', m(new ES6Component(), 'haha')))
       out.should.have('aside.firstRender')
       out.redraw()
       out.should.not.have('aside.firstRender')
@@ -569,6 +663,26 @@ describe('components', function () {
       out = mq(m('div', [
         m(myComponent),
         m(myComponent)
+      ]))
+      out.should.have(2, 'aside.firstRender')
+      out.redraw()
+      out.should.not.have('aside.firstRender')
+    })
+
+    it('should preserve es6 component state with multiples of the same element', function () {
+      out = mq(m('div', [
+        m(ES6Component),
+        m(ES6Component)
+      ]))
+      out.should.have(2, 'aside.firstRender')
+      out.redraw()
+      out.should.not.have('aside.firstRender')
+    })
+
+    it('should preserve es6 instantiated component state with multiples of the same elements', function () {
+      out = mq(m('div', [
+        m(new ES6Component()),
+        m(new ES6Component())
       ]))
       out.should.have(2, 'aside.firstRender')
       out.redraw()
