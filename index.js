@@ -7,9 +7,7 @@ var code = require('yields-keycode')
 var PD = '//'
 
 function copyObj (data) {
-  var output = {}
-  for (var i in data) output[i] = data[i]
-  return output
+  return Object.assign(Object.create(Object.getPrototypeOf(data)), data)
 }
 
 function identity (thing) {
@@ -56,11 +54,15 @@ function isArray (thing) {
 }
 
 function isComponent (thing) {
-  return thing && (typeof thing === 'object' && thing.view) || isFunction(thing)
+  return thing && (typeof thing === 'object' && thing.view) || isFunction(thing) || isClass(thing)
 }
 
 function isFunction (thing) {
-  return typeof thing === 'function'
+  return typeof thing === 'function' && !isClass(thing)
+}
+
+function isClass (thing) {
+  return typeof thing === 'function' && /^\s*class\s+/.test(thing.toString())
 }
 
 function call (thing) {
@@ -105,34 +107,43 @@ function join (arrays) {
   }, [])
 }
 
-function renderComponents (states, onremovers) {
+function renderComponents (states, instances, onremovers) {
   function renderComponent (component, treePath) {
+    if (!instances[treePath]) {
+      if (isFunction(component.tag)) {
+        component.instance = component.tag(component)
+      } else if (isClass(component.tag)) {
+        var Component = component.tag
+        component.instance = new Component(component)
+      } else {
+        component.instance = copyObj(component.tag)
+      }
+      instances[treePath] = component.instance
+    } else {
+      component.instance = instances[treePath]
+    }
     if (!states[treePath]) {
-      component.state = copyObj(component.tag)
-      if (component.tag.oninit) {
-        component.tag.oninit(component)
+      component.state = component.instance
+      if (component.instance.oninit) {
+        component.instance.oninit(component)
         states[treePath] = component.state
       }
-      if (component.tag.onremove) {
+      if (component.instance.onremove) {
         onremovers.push(function () {
-          component.tag.onremove(component)
+          component.instance.onremove(component)
         })
       }
-      if (component.tag._captureVnode) {
-        component.tag._captureVnode(component)
+      if (component.instance._captureVnode) {
+        component.instance._captureVnode(component)
       }
     } else {
       component.state = states[treePath]
-      if (component.tag.onupdate) {
-        component.tag.onupdate(component)
+      if (component.instance.onupdate) {
+        component.instance.onupdate(component)
       }
     }
-    var node
-    if (component.tag.view) {
-      node = component.tag.view(component)
-    } if (isFunction(component.tag)) {
-      node = component.tag(component).view(component)
-    }
+    var node = component.instance.view(component)
+
     if (node) {
       node.parent = component.parent
     }
@@ -160,8 +171,9 @@ function renderComponents (states, onremovers) {
 
 function scan (render) {
   var states = {}
+  var instances = {}
   var onremovers = []
-  var renderNode = renderComponents(states, onremovers)
+  var renderNode = renderComponents(states, instances, onremovers)
   var api = {
     onremovers: onremovers,
     redraw: function () {
