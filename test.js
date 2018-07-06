@@ -781,3 +781,30 @@ describe('Exposing vnode', function () {
     expect(out.vnode.state.baz).toEqual('foz')
   })
 })
+
+describe('keys', function () {
+  it('should distinguish components with different keys', function () {
+    var firstComponent = {
+      view: function () {
+        return m('.first')
+      }
+    }
+    var secondComponent = {
+      view: function () {
+        return m('.second')
+      }
+    }
+    var i = 0
+    var rootComponent = {
+      view: function () {
+        return m(i === 0 ? firstComponent : secondComponent, {key: i})
+      }
+    }
+    var out = mq(rootComponent)
+    out.should.have('.first')
+
+    i = 1
+    out.redraw()
+    out.should.have('.second')
+  })
+})

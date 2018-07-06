@@ -160,7 +160,8 @@ function renderComponents (states, instances, onremovers) {
       })
     }
     if (isComponent(node.tag)) {
-      return renderNode(renderComponent(node, treePath), treePath + PD + (node.key || ''))
+      var componentTreePath = treePath + PD + (node.key || '')
+      return renderNode(renderComponent(node, componentTreePath), componentTreePath)
     }
     if (node.children) {
       node.renderedChildren = renderNode(node.children, treePath + PD + (node.key || ''))
