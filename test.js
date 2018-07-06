@@ -754,11 +754,12 @@ describe('components', function () {
 
 describe('Logging', function () {
   it('should log', function (done) {
-    function logFn (logOut) {
-      expect(logOut).toEqual("[ { tag: [32m'span'[39m,\n    children: \n     [ { tag: [32m'strong'[39m,\n         children: [90mundefined[39m,\n         text: [32m'huhu'[39m,\n         attrs: { className: [32m'tick'[39m } },\n       { tag: [32m'em'[39m,\n         children: [90mundefined[39m,\n         text: [32m'haha'[39m,\n         attrs: { id: [32m'tack'[39m } } ],\n    text: [90mundefined[39m,\n    attrs: [90mundefined[39m } ]")
+    const span = m('span', m('strong.tick', 'huhu'), m('em#tack', 'haha'))
+    function logFn (nodes) {
+      expect(nodes).toEqual([span])
       done()
     }
-    var out = mq(m('div', m('span', m('strong.tick', 'huhu'), m('em#tack', 'haha')), m('.bla', 'blup')))
+    var out = mq(m('div', span, m('.bla', 'blup')))
     out.log('span', logFn)
   })
 })

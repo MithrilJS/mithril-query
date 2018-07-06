@@ -69,6 +69,14 @@ function call (thing) {
   return thing()
 }
 
+function consoleLogFn (a) {
+  var util = require('util')
+  console.log(util.inspect(a, {
+    colors: true,
+    depth: null
+  }))
+}
+
 var language = cssauron({
   tag: 'tag',
   contents: function (node) {
@@ -357,12 +365,8 @@ function scan (render) {
     have: shouldHave,
     contain: shouldContain
   }
-  api.log = function (selector, logFn) {
-    var util = require('util')
-    ;(logFn || console.log)(util.inspect(api.find(selector), {
-      colors: true,
-      depth: null
-    }))
+  api.log = function (selector, logFn = consoleLogFn) {
+    logFn(api.find(selector))
     return api
   }
   return api
