@@ -4,7 +4,7 @@
   "description": "Query mithril virtual dom for testing purposes",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test.js "
+    "test": "mocha test.js && mocha example/simple.test.js"
   },
   "repository": {
     "type": "git",
