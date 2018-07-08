@@ -66,7 +66,7 @@ function isFunction(thing) {
 }
 
 function isClass(thing) {
-  return typeof thing === 'function' && (/^\s*class\s+/).test(thing.toString())
+  return typeof thing === 'function' && /^\s*class\s+/.test(thing.toString())
 }
 
 function call(thing) {
