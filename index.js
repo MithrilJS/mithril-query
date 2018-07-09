@@ -421,16 +421,7 @@ function scan(render) {
 
 function init(viewOrComponentOrRootNode, nodeOrAttrs) {
   let api = {}
-  const isViewFunction = isFunction(viewOrComponentOrRootNode)
-  if (isViewFunction) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      'Using a view function as first argument is deprecated in order to support closure components. Please use object notation (`{ view: () => viewFunction(arg) }`).'
-    )
-    api = scan(function() {
-      return viewOrComponentOrRootNode(nodeOrAttrs)
-    })
-  } else if (isComponent(viewOrComponentOrRootNode)) {
+  if (isComponent(viewOrComponentOrRootNode)) {
     api = scan(function(api) {
       viewOrComponentOrRootNode._captureVnode = function(vnode) {
         api.vnode = vnode

@@ -263,9 +263,9 @@ describe('null objects', function() {
     function view() {
       return m('div', [null, m('input'), null])
     }
-    mq(view).should.have('input')
+    mq({view}).should.have('input')
     expect(function() {
-      mq(view()).should.have('input')
+      mq({view}).should.have('input')
     }).toNotThrow()
   })
 })
@@ -276,19 +276,19 @@ describe('autorender', function() {
 
     beforeEach(function() {
       const component = {
-        oninit(node) {
-          node.state = {
+        oninit(vnode) {
+          vnode.state = {
             visible: true,
             toggleMe() {
-              node.state.visible = !node.state.visible
+              vnode.state.visible = !vnode.state.visible
             },
           }
         },
-        view(node) {
+        view(vnode) {
           return m(
-            node.state.visible ? '.visible' : '.hidden',
+            vnode.state.visible ? '.visible' : '.hidden',
             {
-              onclick: node.state.toggleMe,
+              onclick: vnode.state.toggleMe,
             },
             'Test'
           )
@@ -306,29 +306,31 @@ describe('autorender', function() {
     })
 
     it('should update boolean attributes', function() {
-      out = mq(function() {
+      out = mq({view: function() {
         return m('select', [m('option', { value: 'foo', selected: true })])
-      })
+      }})
       out.should.have('option[selected]')
     })
   })
 
   describe('autorerender function', function() {
     it('should autorender function', function() {
-      function view(node) {
+      function view(vnode) {
         return m(
-          node.state.visible ? '.visible' : '.hidden',
+          vnode.state.visible ? '.visible' : '.hidden',
           {
             onclick() {
-              node.state.visible = !node.state.visible
+              vnode.state.visible = !vnode.state.visible
             },
           },
           'Test'
         )
       }
 
-      const node = { state: { visible: true } }
-      const out = mq(view, node)
+      const out = mq({
+        oninit: vnode => vnode.state.visible = true,
+        view
+      })
       out.should.have('.visible')
       out.click('.visible')
       out.should.have('.hidden')
@@ -343,7 +345,7 @@ describe('access root element', function() {
     function view() {
       return m('div', ['foo', 'bar'])
     }
-    const out = mq(view)
+    const out = mq({view})
     expect(out.rootNode.tag).toEqual('div')
     expect(out.rootNode.children.length).toEqual(2)
     expect(out.rootNode.children[0].children).toEqual('foo')
@@ -355,22 +357,22 @@ describe('trigger keyboard events', function() {
   it('should be possible to trigger keyboard events', function() {
     const component = {
       updateSpy: noop,
-      oninit(node) {
-        node.state = {
+      oninit(vnode) {
+        vnode.state = {
           visible: true,
           update(event) {
-            if (event.keyCode === 123) node.state.visible = false
-            if (event.keyCode === keyCode('esc')) node.state.visible = true
+            if (event.keyCode === 123) vnode.state.visible = false
+            if (event.keyCode === keyCode('esc')) vnode.state.visible = true
             component.updateSpy(event)
           },
         }
-        return node.state
+        return vnode.state
       },
-      view(node) {
+      view(vnode) {
         return m(
-          node.state.visible ? '.visible' : '.hidden',
+          vnode.state.visible ? '.visible' : '.hidden',
           {
-            onkeydown: node.state.update,
+            onkeydown: vnode.state.update,
           },
           'describe'
         )
@@ -407,44 +409,44 @@ describe('components', function() {
 
   beforeEach(function() {
     myComponent = {
-      oninit(node) {
-        node.state = {
-          foo: node.attrs.data || 'bar',
+      oninit(vnode) {
+        vnode.state = {
+          foo: vnode.attrs.data || 'bar',
           firstRender: true,
         }
       },
-      onupdate(node) {
-        node.state.firstRender = false
+      onupdate(vnode) {
+        vnode.state.firstRender = false
       },
-      view(node) {
+      view(vnode) {
         return m(
           'aside',
           {
-            className: node.state.firstRender ? 'firstRender' : '',
+            className: vnode.state.firstRender ? 'firstRender' : '',
           },
-          [node.attrs.data, 'hello', node.state.foo]
+          [vnode.attrs.data, 'hello', vnode.state.foo]
         )
       },
     }
 
     ES6Component = class {
-      oninit(node) {
+      oninit(vnode) {
         this.hello = 'hello'
-        node.state = {
-          foo: node.attrs.data || 'bar',
+        vnode.state = {
+          foo: vnode.attrs.data || 'bar',
           firstRender: true,
         }
       }
-      onupdate(node) {
-        node.state.firstRender = false
+      onupdate(vnode) {
+        vnode.state.firstRender = false
       }
-      view(node) {
+      view(vnode) {
         return m(
           'aside',
           {
-            className: node.state.firstRender ? 'firstRender' : '',
+            className: vnode.state.firstRender ? 'firstRender' : '',
           },
-          [node.attrs.data, this.hello, node.state.foo]
+          [vnode.attrs.data, this.hello, vnode.state.foo]
         )
       }
     }
@@ -465,8 +467,8 @@ describe('components', function() {
 
     it('should work without oninit', function() {
       const simpleComponent = {
-        view(node) {
-          return m('span', node.attrs.data)
+        view(vnode) {
+          return m('span', vnode.attrs.data)
         },
       }
       out = mq(simpleComponent, { data: 'mega' })
@@ -492,9 +494,7 @@ describe('components', function() {
       }
     }
 
-    // this dow not work currently since it needs a breaking change
-    // because mq now thinks this is a view function.
-    it.skip('should support it as arguments', function() {
+    it('should support it as arguments', function() {
       out = mq(closureComponent, { name: 'Homer' })
       out.should.have('div:contains(Hello from Homer)')
     })
@@ -593,8 +593,8 @@ describe('components', function() {
 
     it('should work without oninit', function() {
       const simpleComponent = {
-        view(node) {
-          return m('span', node.attrs.data)
+        view(vnode) {
+          return m('span', vnode.attrs.data)
         },
       }
       out = mq(m('div', m(simpleComponent, { data: 'mega' })))
