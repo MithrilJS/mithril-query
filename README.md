@@ -219,3 +219,20 @@ expect(out.vnode.state.baz).toEqual('foz')
 ### `onremove` handling
 
 To trigger `onremove`-handlers of all initialised components, just call `out.onremove()`
+
+## Typescript
+
+To use in Typescript add the following at the top of your .ts file
+
+```javascript
+/// <amd-dependency path="mitril-query" />
+declare var require: (moduleId: string) => any;
+var mq = require("mithril-query");
+```
+
+This uses an undocumented amd-dependency feature of TypeScript.
+
+The `amd-dependency` directive will tell the compiler to include your module to "define" arguments in generated code: [see a sample here](http://www.typescriptlang.org/Playground/#src=%2F%2F%2F%20%3Camd-dependency%20path%3D%22model%2Ftree%22%20%2F%3E%0Adeclare%20var%20require%3A%28moduleId%3Astring%29%20%3D%3E%20any%3B%0Avar%20Tree%20%3D%20require%28%22model%2Ftree%22%29%3B%0A%0Aexport%20class%20A%20%7B%7D).
+
+Original source: [How use an external non-typescript library from typescript without .d.ts?](https://stackoverflow.com/questions/27417107/how-use-an-external-non-typescript-library-from-typescript-without-d-ts)
+
