@@ -1,6 +1,5 @@
 'use strict'
 
-const util = require('util');
 const m = require('mithril/render/hyperscript')
 const cssauron = require('cssauron')
 const code = require('yields-keycode')
@@ -169,7 +168,7 @@ function renderComponents(states, instances, onremovers) {
     if (!node) {
       return ''
     }
-    if (isArray(node) && node.length) {
+    if (isArray(node)) {
       return node.map(function(subnode, index) {
         return renderNode(parent, subnode, treePath + PD + index)
       })
