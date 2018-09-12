@@ -146,8 +146,8 @@ contains the value as `event.target.value` and `event.target.currentValue`.
 
 It also supports key events
 
-* `out.keydown(selector, keycode, [event])` – calls `onkeydown` with `keycode`
-* `out.keydown(selector, keyname, [event])` – calse `onkeydown` with keycode mapped from name. Mapping is done with [this lib](https://github.com/npmcomponent/yields-keycode).
+* `out.keydown(selector, keycode, [event], [silent])` – calls `onkeydown` with `keycode`
+* `out.keydown(selector, keyname, [event], [silent])` – calse `onkeydown` with keycode mapped from name. Mapping is done with [this lib](https://github.com/npmcomponent/yields-keycode).
 
 `keyup`, `keypress` are supported as well.
 

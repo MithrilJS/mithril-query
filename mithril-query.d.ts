@@ -27,9 +27,9 @@ interface MithrilQueryInstance {
   mouseenter: (selector: string, event: Event, silent?: boolean) => void
   mouseleave: (selector: string, event: Event, silent?: boolean) => void
   contextmenu: (selector: string, event: Event, silent?: boolean) => void
-  keydown: (selector: string, key: string, options: KeyEventOptions) => void
-  keypress: (selector: string, key: string, options: KeyEventOptions) => void
-  keyup: (selector: string, key: string, options: KeyEventOptions) => void
+  keydown: (selector: string, key: string, event: Event, silent?: boolean) => void
+  keypress: (selector: string, key: string, event: Event, silent?: boolean) => void
+  keyup: (selector: string, key: string, event: Event, silent?: boolean) => void
   trigger: (selector: string, eventName: string, event: Event, silent?: boolean) => void
   shouldHave: {
     at: {
