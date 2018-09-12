@@ -161,34 +161,39 @@ function renderComponents(states, instances, onremovers) {
     }
     const node = component.instance.view(component)
 
-    if (node) {
-      node.parent = component.parent
-    }
     return node
   }
 
-  return function renderNode(node, treePath) {
+  return function renderNode(parent, node, treePath) {
     if (!node) {
       return ''
     }
     if (isArray(node)) {
       return node.map(function(subnode, index) {
-        return renderNode(subnode, treePath + PD + index)
+        return renderNode(parent, subnode, treePath + PD + index)
       })
     }
     if (isComponent(node.tag)) {
       const componentTreePath = treePath + PD + (node.key || '')
       return renderNode(
+        parent,
         renderComponent(node, componentTreePath),
         componentTreePath
       )
     }
+    
     if (node.children) {
       node.renderedChildren = renderNode(
+        node,
         node.children,
         treePath + PD + (node.key || '')
       )
     }
+
+    if (isString(node.tag)) {
+      node.parent = parent;
+    }
+
     return node
   }
 }
@@ -201,7 +206,7 @@ function scan(render) {
   const api = {
     onremovers,
     redraw() {
-      api.rootNode = renderNode(render(api), 'ROOT')
+      api.rootNode = renderNode(undefined, render(api), 'ROOT')
     },
   }
   api.redraw()

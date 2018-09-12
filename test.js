@@ -774,6 +774,15 @@ describe('components', function() {
     })
   })
 
+  describe('component with leading array', function() {
+    it('should be able to query children within leading array component', function() {
+      let comp1 = { view: () => m('.comp1', m(comp2)) }
+      let comp2 = { view: () => [ m('.comp2') ] }
+      let output = mq(m(comp1))
+      output.should.have('.comp1 .comp2') // Nope!
+    })
+  })
+
   describe('initialisation', function() {
     it('should copy init args to state', function() {
       const myComponent = {
@@ -874,3 +883,4 @@ describe('keys', function() {
     out.should.have('.second')
   })
 })
+
