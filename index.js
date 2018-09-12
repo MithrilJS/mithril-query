@@ -357,21 +357,20 @@ function scan(render) {
 
   function triggerKey(eventName) {
     const fire = trigger('on' + eventName)
-    return function handleEvent(selector, key, options) {
-      options = options || {}
+    return function handleEvent(selector, key, event, silent) {
       const keyCode = isString(key) ? code(key) : key
+      const defaultEvent = {
+        altKey: false,
+        shiftKey: false,
+        ctrlKey: false,
+        type: eventName,
+        keyCode,
+        which: keyCode,
+      }
       fire(
         selector,
-        {
-          target: options.target || { value: options.value },
-          altKey: !!options.altKey,
-          shiftKey: !!options.shiftKey,
-          ctrlKey: !!options.ctrlKey,
-          type: eventName,
-          keyCode,
-          which: keyCode,
-        },
-        !!options.silent
+        Object.assign({}, defaultEvent, event || {}),
+        !!silent
       )
     }
   }

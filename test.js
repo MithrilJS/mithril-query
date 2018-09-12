@@ -379,14 +379,14 @@ describe('trigger keyboard events', function() {
       },
     }
     const out = mq(component)
-    component.updateSpupdateSpy = function(event) {
+    component.updateSpy = function(event) {
       expect(event.target.value).toEqual('foobar')
       expect(event.altKey).toBe(true)
       expect(event.shiftKey).toBe(true)
       expect(event.ctrlKey).toBe(false)
     }
     out.keydown('div', 'esc', {
-      value: 'foobar',
+      target: { value: 'foobar' },
       altKey: true,
       shiftKey: true,
     })
