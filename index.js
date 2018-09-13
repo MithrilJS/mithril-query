@@ -1,10 +1,10 @@
 'use strict'
 
-const m = require('mithril/render/hyperscript')
-const cssauron = require('cssauron')
-const code = require('yields-keycode')
+var m = require('mithril/render/hyperscript')
+var cssauron = require('cssauron')
+var code = require('yields-keycode')
 
-const PD = '//'
+var PD = '//'
 
 function copyObj(data) {
   return Object.assign(Object.create(Object.getPrototypeOf(data)), data)
@@ -74,7 +74,7 @@ function call(thing) {
 }
 
 function consoleLogFn(a) {
-  const util = require('util')
+  var util = require('util')
   // eslint-disable-next-line no-console
   console.log(
     util.inspect(a, {
@@ -84,10 +84,10 @@ function consoleLogFn(a) {
   )
 }
 
-const language = cssauron({
+var language = cssauron({
   tag: 'tag',
   contents(node) {
-    const content = node.text == null ? '' : '' + node.text
+    var content = node.text == null ? '' : '' + node.text
     if (isStringOrNumber(node.children) || isBoolean(node.children)) {
       return '' + content + node.children
     }
@@ -130,7 +130,7 @@ function renderComponents(states, instances, onremovers) {
       if (isFunction(component.tag)) {
         component.instance = component.tag(component)
       } else if (isClass(component.tag)) {
-        const Component = component.tag
+        var Component = component.tag
         component.instance = new Component(component)
       } else {
         component.instance = copyObj(component.tag)
@@ -159,7 +159,7 @@ function renderComponents(states, instances, onremovers) {
         component.instance.onupdate(component)
       }
     }
-    const node = component.instance.view(component)
+    var node = component.instance.view(component)
 
     return node
   }
@@ -174,7 +174,7 @@ function renderComponents(states, instances, onremovers) {
       })
     }
     if (isComponent(node.tag)) {
-      const componentTreePath = treePath + PD + (node.key || '')
+      var componentTreePath = treePath + PD + (node.key || '')
       return renderNode(
         parent,
         renderComponent(node, componentTreePath),
@@ -199,11 +199,11 @@ function renderComponents(states, instances, onremovers) {
 }
 
 function scan(render) {
-  const states = {}
-  const instances = {}
-  const onremovers = []
-  const renderNode = renderComponents(states, instances, onremovers)
-  const api = {
+  var states = {}
+  var instances = {}
+  var onremovers = []
+  var renderNode = renderComponents(states, instances, onremovers)
+  var api = {
     onremovers,
     redraw() {
       api.rootNode = renderNode(undefined, render(api), 'ROOT')
@@ -227,7 +227,7 @@ function scan(render) {
           })
         )
       }
-      const foundNodes = []
+      var foundNodes = []
       if (matchesSelector(node)) {
         foundNodes.push(node)
       }
@@ -257,7 +257,7 @@ function scan(render) {
   }
 
   function first(selector) {
-    const node = find(selector, api.rootNode)[0]
+    var node = find(selector, api.rootNode)[0]
     if (!node) {
       throw new Error('No element matches ' + selector)
     }
@@ -273,7 +273,7 @@ function scan(render) {
   }
 
   function shouldHaveAtLeast(minCount, selector) {
-    const actualCount = find(selector, api.rootNode).length
+    var actualCount = find(selector, api.rootNode).length
     if (actualCount < minCount) {
       throw new Error(
         'Wrong count of elements that matches "' +
@@ -294,7 +294,7 @@ function scan(render) {
         : shouldHaveAtLeast(1, expectedCount)
     }
 
-    const actualCount = find(selector, api.rootNode).length
+    var actualCount = find(selector, api.rootNode).length
     if (actualCount !== expectedCount) {
       throw new Error(
         'Wrong count of elements that matches "' +
@@ -335,8 +335,8 @@ function scan(render) {
   }
 
   function setValue(selector, string, silent) {
-    const attrs = first(selector).attrs
-    const event = {
+    var attrs = first(selector).attrs
+    var event = {
       currentTarget: { value: string },
       target: { value: string },
     }
@@ -348,7 +348,7 @@ function scan(render) {
 
   function trigger(eventName) {
     return function(selector, event, silent) {
-      const attrs = first(selector).attrs
+      var attrs = first(selector).attrs
       attrs[eventName](event)
       silent = silent || (event && event.redraw === false)
       silent || api.redraw()
@@ -356,10 +356,10 @@ function scan(render) {
   }
 
   function triggerKey(eventName) {
-    const fire = trigger('on' + eventName)
+    var fire = trigger('on' + eventName)
     return function handleEvent(selector, key, event, silent) {
-      const keyCode = isString(key) ? code(key) : key
-      const defaultEvent = {
+      var keyCode = isString(key) ? code(key) : key
+      var defaultEvent = {
         altKey: false,
         shiftKey: false,
         ctrlKey: false,
