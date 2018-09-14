@@ -80,6 +80,30 @@ describe('mithril query', function() {
       expect(out.first('[data-foo=bar]')).toEqual(dataAttr)
       expect(out.find('[data-foo=no]')).toEqual([])
     })
+
+    describe('traverse from a parent to its children for sibling selectors', function() {
+      it('adjacent sibling combinator ', function() {
+        let output = mq(m('div', [
+          m('div.first'),
+          m('div.second')
+        ]))
+
+        output.should.have('.first + .second')
+        output.should.not.have('.second + .first')
+      })
+
+      it('general sibling combinator', function() {
+        let output = mq(m('div', [
+          m('span'),
+          m('p'),
+          m('span'),
+          m('a'),
+          m('span')
+        ]))
+
+        expect(output.find('p ~ span').length).toEqual(2)
+      })
+    })
   })
 
   describe('events', function() {
