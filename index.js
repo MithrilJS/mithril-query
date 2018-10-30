@@ -107,7 +107,7 @@ const language = cssauron({
   },
   parent: 'parent',
   children(node) {
-    return isArray(node.renderedChildren)
+    return node && isArray(node.renderedChildren)
       ? node.renderedChildren.filter(identity)
       : []
   },
@@ -155,9 +155,7 @@ function renderComponents(states, onremovers) {
         component.instance.onupdate(component)
       }
     }
-    const node = component.instance.view(component)
-
-    return node
+    return component.instance.view(component)
   }
 
   return function renderNode(parent, node, treePath) {
