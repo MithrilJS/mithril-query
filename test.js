@@ -848,6 +848,28 @@ describe('components', function() {
       mq(m(nullComponent, m(myComponent))).should.not.have('aside.firstRender')
     })
   })
+
+  it('should not confuse component instance index on redraw', function () {
+    let showFirst = true;
+
+    const first = { view: () => m('div.first') }
+    const second = { view: () => m('div.second') }
+
+    var output = mq(m({
+      view: () => m('div', [
+        showFirst ? m(first) : m(second),
+      ]),
+    }));
+
+    output.should.have('div.first');
+    output.should.not.have('div.second');
+
+    showFirst = !showFirst;
+    output.redraw();
+
+    output.should.have('div.second');
+    output.should.not.have('div.first');
+  })
 })
 
 describe('Logging', function() {
