@@ -21,7 +21,7 @@ describe('mithril query', function() {
       dataAttr,
       booleanEl
     let devilEl, idClassEl, arrayOfArrays, rawHtml, numbah, disabled
-    let contentAsArray
+    let contentAsArray, contentAsDoubleArray
     let msxOutput
 
     beforeEach(function() {
@@ -36,6 +36,7 @@ describe('mithril query', function() {
       disabled = m('[disabled]')
       dataAttr = m('[data-foo=bar]')
       contentAsArray = m('.contentAsArray', m('.inner', [123, 'foobar']))
+      contentAsDoubleArray = m('.contentAsDoubleArray', [['foobar']])
       rawHtml = mTrust('<div class="trusted"></div>')
       numbah = 10
       booleanEl = m('span', true)
@@ -56,6 +57,7 @@ describe('mithril query', function() {
         disabled,
         msxOutput,
         contentAsArray,
+        contentAsDoubleArray,
       ])
       out = mq(el)
     })
@@ -76,6 +78,7 @@ describe('mithril query', function() {
         'root'
       )
       out.should.have('.contentAsArray :contains(123foobar)')
+      out.should.have('.contentAsDoubleArray:contains(foobar)')
       expect(out.first('[disabled]')).toEqual(disabled)
       expect(out.first('[data-foo=bar]')).toEqual(dataAttr)
       expect(out.find('[data-foo=no]')).toEqual([])
@@ -850,7 +853,7 @@ describe('components', function() {
   })
 
   it('should not confuse component instance index on redraw', function () {
-    let showFirst = true;
+    let showFirst = true
 
     const first = { view: () => m('div.first') }
     const second = { view: () => m('div.second') }
@@ -859,16 +862,16 @@ describe('components', function() {
       view: () => m('div', [
         showFirst ? m(first) : m(second),
       ]),
-    }));
+    }))
 
-    output.should.have('div.first');
-    output.should.not.have('div.second');
+    output.should.have('div.first')
+    output.should.not.have('div.second')
 
-    showFirst = !showFirst;
-    output.redraw();
+    showFirst = !showFirst
+    output.redraw()
 
-    output.should.have('div.second');
-    output.should.not.have('div.first');
+    output.should.have('div.second')
+    output.should.not.have('div.first')
   })
 })
 

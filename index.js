@@ -40,7 +40,7 @@ function getContent(thing) {
   if (isNumber(thing)) {
     return '' + thing
   }
-  if (thing.tag === '#') {
+  if (thing.tag === '#' || thing.tag === '[') {
     return getContent(thing.children)
   }
   if (isArray(thing)) {
@@ -88,9 +88,11 @@ const language = cssauron({
   tag: 'tag',
   contents(node) {
     const content = node.text == null ? '' : '' + node.text
+
     if (isStringOrNumber(node.children) || isBoolean(node.children)) {
       return '' + content + node.children
     }
+
     return '' + content + getContent(node.renderedChildren)
   },
   id(node) {
@@ -134,7 +136,7 @@ function renderComponents(states, onremovers) {
     } else {
       component.instance = copyObj(component.tag)
     }
-    
+
     if (!states[treePath]) {
       component.state = component.instance
       if (component.instance.oninit) {
@@ -175,7 +177,7 @@ function renderComponents(states, onremovers) {
         componentTreePath
       )
     }
-    
+
     if (node.children) {
       node.renderedChildren = renderNode(
         node,
@@ -185,7 +187,7 @@ function renderComponents(states, onremovers) {
     }
 
     if (isString(node.tag)) {
-      node.parent = parent;
+      node.parent = parent
     }
 
     return node
