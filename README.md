@@ -70,12 +70,6 @@ Run the test with
 
 First call `mithril-query` with either a vnode or a component. You can call it
 with one extra argument wich will be used as `attrs` in the component case.
-[Closure Components](https://mithril.js.org/components.html#closure-components)
-are currently only supported as part of the tree, not directly as argumend to
-`mq` function. Supporting this will result in a breaking change, because it
-conflicts with the call with a view function as first argument, what is
-deprecated now.
-
 
 ```js
 var mq = require('mithril-query')
@@ -83,24 +77,24 @@ var mq = require('mithril-query')
 // plain vnode
 var out = mq(m('div'))
 
-// view function - DEPRECATED! don't use.
-function myView(text) {
-  return m('div', text)
-}
-var out = mq(myView, 'huhu')
-
-// Use this instead!
-var out = mq({
-  view: () => myView('huhu')
-})
-
-// component
+// object component
 var myComponent = {
   view: function (vnode) {
     return m('div', vnode.attrs.text)
   }
 }
 var out = mq(myComponent, { text: 'huhu' })
+
+// closure component
+function myComponent() {
+  return {
+    view: function (vnode) {
+      return m('div', vnode.attrs.text)
+    }
+  }
+}
+var out = mq(myComponent, { text: 'huhu' })
+
 ```
 
 ### Query API
