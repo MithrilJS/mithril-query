@@ -115,7 +115,7 @@ const language = cssauron({
   },
   attr(node, attr) {
     if (node.attrs) {
-      return '' + node.attrs[attr]
+      return node.attrs[attr] == null ? '' : '' + node.attrs[attr]
     }
   },
 })

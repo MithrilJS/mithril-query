@@ -11,6 +11,79 @@ function noop() {}
 
 describe('mithril query', function() {
   describe('basic selection of things', function() {
+    let el,
+      out,
+      tagEl,
+      concatClassEl,
+      classEl,
+      idEl,
+      innerString,
+      dataAttr,
+      booleanEl
+    let devilEl, idClassEl, arrayOfArrays, rawHtml, numbah, disabled
+    let contentAsArray, contentAsDoubleArray
+    let msxOutput
+
+    beforeEach(function() {
+      tagEl = m('span', 123)
+      concatClassEl = m('.onetwo')
+      classEl = m('.one.two')
+      idEl = m('#two')
+      innerString = 'Inner String'
+      devilEl = m('.three', 'DEVIL')
+      idClassEl = m('#three.three')
+      arrayOfArrays = m('#arrayArray')
+      disabled = m('[disabled]')
+      dataAttr = m('[data-foo=bar]')
+      contentAsArray = m('.contentAsArray', m('.inner', [123, 'foobar']))
+      contentAsDoubleArray = m('.contentAsDoubleArray', [['foobar']])
+      rawHtml = mTrust('<div class="trusted"></div>')
+      numbah = 10
+      booleanEl = m('span', true)
+      el = m('.root', [
+        tagEl,
+        concatClassEl,
+        classEl,
+        innerString,
+        idEl,
+        devilEl,
+        idClassEl,
+        [[arrayOfArrays]],
+        undefined,
+        dataAttr,
+        numbah,
+        booleanEl,
+        rawHtml,
+        disabled,
+        msxOutput,
+        contentAsArray,
+        contentAsDoubleArray,
+      ])
+      out = mq(el)
+    })
+
+    it('should allow to select by selectors', function() {
+      expect(out.first('span')).toEqual(tagEl)
+      expect(out.first('.one')).toEqual(classEl)
+      expect(out.first('div > .one')).toEqual(classEl)
+      expect(out.first('.two.one')).toEqual(classEl)
+      expect(out.first('#two')).toEqual(idEl)
+      expect(out.first('div#two')).toEqual(idEl)
+      expect(out.first('.three#three')).toEqual(idClassEl)
+      expect(out.first(':contains(DEVIL)')).toEqual(devilEl)
+      expect(out.first('#arrayArray')).toEqual(arrayOfArrays)
+      expect(out.first(':contains(123)')).toEqual(tagEl)
+      expect(out.first(':contains(true)')).toEqual(booleanEl)
+      expect(out.first(':contains(Inner String)').attrs.className).toEqual(
+        'root'
+      )
+      out.should.have('.contentAsArray :contains(123foobar)')
+      out.should.have('.contentAsDoubleArray:contains(foobar)')
+      expect(out.first('[disabled]')).toEqual(disabled)
+      expect(out.first('[data-foo=bar]')).toEqual(dataAttr)
+      expect(out.find('[data-foo=no]')).toEqual([])
+    })
+
     it('Should be able to parse identifier', function() {
       var output = mq(m('div', m('span#three.three')));
       output.should.have('span#three');
@@ -95,8 +168,6 @@ describe('mithril query', function() {
           checked: true, 
           disabled: false, 
           number: 1234,
-          undefined: undefined,
-          null: null,
           object: {},
           array: [1,2,3,4]
         })));
@@ -104,8 +175,6 @@ describe('mithril query', function() {
         output.should.have('input[checked=true]');
         output.should.have('input[disabled=false]');
         output.should.have('input[number=1234]');
-        output.should.have('input[undefined=undefined]');
-        output.should.have('input[null=null]');
         output.should.have('input[object="[object Object]"]');
         output.should.have('input[array="1,2,3,4"]');
       })
