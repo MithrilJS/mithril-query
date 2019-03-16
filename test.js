@@ -84,6 +84,102 @@ describe('mithril query', function() {
       expect(out.find('[data-foo=no]')).toEqual([])
     })
 
+    it('Should be able to parse identifier', function() {
+      var output = mq(m('div', m('span#three.three')));
+      output.should.have('span#three');
+      output.should.have('span.three');
+      output.should.have('.three#three');
+      output.should.have('#three.three');
+      output.should.have('div > #three');
+      output.should.have('div > span#three');
+      output.should.have('div > span#three.three');
+    })
+
+    describe('Should be able to parse class', function() {
+      it('Should be able to parse multiple classes', function() {
+        var output = mq(m('div', m('span.one.two')));
+        output.should.have('.one');
+        output.should.have('.two');
+        output.should.have('.one.two');
+        output.should.have('.two.one');
+        output.should.have('div > .one');
+        output.should.have('div > .two');
+      })
+    })
+
+    describe('Should be able to parse content', function() {
+      it('Should be able to parse basic content', function() {
+        var output = mq(m('div', m('span', 'Some simple content')));
+        output.should.have('span');
+        output.should.have(':contains(Some simple content)');
+        output.should.have('span:contains(Some simple content)');
+        output.should.have('div > span:contains(Some simple content)');
+      })
+
+      it('Should be able to parse array content', function() {
+        var output = mq(m('div',[
+          m('.simple', [123, 'simple']),
+          m('.double', [['double']])
+        ]));
+        output.should.have('.simple:contains(123simple)')
+        output.should.have(':contains(123simple)')
+        output.should.have('div > .simple:contains(123simple)')
+
+        output.should.have('.double:contains(double)')
+        output.should.have(':contains(double)')
+        output.should.have('div > .double:contains(double)')
+      })
+
+      it('Should be able to parse number content', function() {
+        var output = mq(m('div', m('span', 123)));
+        output.should.have('span');
+        output.should.have(':contains(123)');
+        output.should.have('span:contains(123)');
+        output.should.have('div > span:contains(123)');
+      })
+
+      it('Should be able to parse boolean content', function() {
+        var output = mq(m('div', m('span', true)));
+        output.should.have('span');
+        output.should.have(':contains(true)');
+        output.should.have('span:contains(true)');
+        output.should.have('div > span:contains(true)');
+      })
+    })
+
+    describe('Should be able to parse attribute', function() {
+      it('Should be able to parse basic attribute', function() {
+        var output = mq(m('div', [
+          m('input[disabled]'),
+          m('span[data-foo=bar]')
+        ]));
+
+        output.should.have('[disabled]');
+        output.should.have('input[disabled]');
+        output.should.have('div > input[disabled]');
+
+        output.should.have('[data-foo=bar]');
+        output.should.have('span[data-foo=bar]');
+        output.should.have('div > span[data-foo=bar]');
+      })
+
+      it('Should be able to parse non-string attributes', function() {
+        var output = mq(m('div', m('input', {
+          checked: true, 
+          disabled: false, 
+          number: 1234,
+          object: {},
+          array: [1,2,3,4]
+        })));
+
+        output.should.have('input[checked=true]');
+        output.should.have('input[disabled=false]');
+        output.should.have('input[number=1234]');
+        output.should.have('input[object="[object Object]"]');
+        output.should.have('input[array="1,2,3,4"]');
+      })
+    })
+
     describe('traverse from a parent to its children for sibling selectors', function() {
       it('adjacent sibling combinator ', function() {
         let output = mq(m('div', [
