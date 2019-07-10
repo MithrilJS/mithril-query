@@ -84,6 +84,17 @@ function consoleLogFn(a) {
   )
 }
 
+function validateKeys(vnodes) {
+  const isKeyed = vnodes[0] != null && vnodes[0].key != null
+  for (var i = 1; i < vnodes.length; i++) {
+    if ((vnodes[i] != null && vnodes[i].key != null) !== isKeyed) {
+      throw new TypeError(
+        'Vnodes must either always have keys or never have keys!'
+      )
+    }
+  }
+}
+
 const language = cssauron({
   tag: 'tag',
   contents(node) {
@@ -179,6 +190,7 @@ function renderComponents(states, onremovers) {
     }
 
     if (node.children) {
+      validateKeys(node.children)
       node.renderedChildren = renderNode(
         node,
         node.children,
@@ -362,11 +374,7 @@ function scan(render) {
         keyCode,
         which: keyCode,
       }
-      fire(
-        selector,
-        Object.assign({}, defaultEvent, event || {}),
-        !!silent
-      )
+      fire(selector, Object.assign({}, defaultEvent, event || {}), !!silent)
     }
   }
 
