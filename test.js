@@ -84,6 +84,16 @@ describe('mithril query', function() {
       expect(out.find('[data-foo=no]')).toEqual([])
     })
 
+    it('should not throw when mixing keyed and unkeyed vnodes', function() {
+      const mixedKeyNode = m('ul', [
+        m('li', {key: 1}),
+        m('li'),
+      ])
+      expect(function() {
+        mq(mixedKeyNode)
+      }).toThrow()
+    })
+
     it('Should be able to parse identifier', function() {
       var output = mq(m('div', m('span#three.three')));
       output.should.have('span#three');
