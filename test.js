@@ -13,9 +13,24 @@ describe('mithril query', function() {
   describe('basic selection of things', function() {
     let el,
       out,
-      tagEl, concatClassEl, classEl, idEl, innerString, dataAttr, booleanEl, unselected,
-      selected, devilEl, idClassEl, arrayOfArrays, rawHtml, numbah, disabled, contentAsArray,
-      contentAsDoubleArray, msxOutput
+      tagEl,
+      concatClassEl,
+      classEl,
+      idEl,
+      innerString,
+      dataAttr,
+      booleanEl,
+      unselected,
+      selected,
+      devilEl,
+      idClassEl,
+      arrayOfArrays,
+      rawHtml,
+      numbah,
+      disabled,
+      contentAsArray,
+      contentAsDoubleArray,
+      msxOutput
 
     beforeEach(function() {
       tagEl = m('span', 123)
@@ -54,7 +69,7 @@ describe('mithril query', function() {
         contentAsArray,
         contentAsDoubleArray,
         unselected,
-        selected
+        selected,
       ])
       out = mq(el)
     })
@@ -84,52 +99,48 @@ describe('mithril query', function() {
     })
 
     it('should not throw when mixing keyed and unkeyed vnodes', function() {
-      const mixedKeyNode = m('ul', [
-        m('li', {key: 1}),
-        m('li'),
-      ])
+      const mixedKeyNode = m('ul', [m('li', { key: 1 }), m('li')])
       expect(function() {
         mq(mixedKeyNode)
       }).toThrow()
     })
 
     it('Should be able to parse identifier', function() {
-      var output = mq(m('div', m('span#three.three')));
-      output.should.have('span#three');
-      output.should.have('span.three');
-      output.should.have('.three#three');
-      output.should.have('#three.three');
-      output.should.have('div > #three');
-      output.should.have('div > span#three');
-      output.should.have('div > span#three.three');
+      var output = mq(m('div', m('span#three.three')))
+      output.should.have('span#three')
+      output.should.have('span.three')
+      output.should.have('.three#three')
+      output.should.have('#three.three')
+      output.should.have('div > #three')
+      output.should.have('div > span#three')
+      output.should.have('div > span#three.three')
     })
 
     describe('Should be able to parse class', function() {
       it('Should be able to parse multiple classes', function() {
-        var output = mq(m('div', m('span.one.two')));
-        output.should.have('.one');
-        output.should.have('.two');
-        output.should.have('.one.two');
-        output.should.have('.two.one');
-        output.should.have('div > .one');
-        output.should.have('div > .two');
+        var output = mq(m('div', m('span.one.two')))
+        output.should.have('.one')
+        output.should.have('.two')
+        output.should.have('.one.two')
+        output.should.have('.two.one')
+        output.should.have('div > .one')
+        output.should.have('div > .two')
       })
     })
 
     describe('Should be able to parse content', function() {
       it('Should be able to parse basic content', function() {
-        var output = mq(m('div', m('span', 'Some simple content')));
-        output.should.have('span');
-        output.should.have(':contains(Some simple content)');
-        output.should.have('span:contains(Some simple content)');
-        output.should.have('div > span:contains(Some simple content)');
+        var output = mq(m('div', m('span', 'Some simple content')))
+        output.should.have('span')
+        output.should.have(':contains(Some simple content)')
+        output.should.have('span:contains(Some simple content)')
+        output.should.have('div > span:contains(Some simple content)')
       })
 
       it('Should be able to parse array content', function() {
-        var output = mq(m('div',[
-          m('.simple', [123, 'simple']),
-          m('.double', [['double']])
-        ]));
+        var output = mq(
+          m('div', [m('.simple', [123, 'simple']), m('.double', [['double']])])
+        )
         output.should.have('.simple:contains(123simple)')
         output.should.have(':contains(123simple)')
         output.should.have('div > .simple:contains(123simple)')
@@ -140,76 +151,72 @@ describe('mithril query', function() {
       })
 
       it('Should be able to parse number content', function() {
-        var output = mq(m('div', m('span', 123)));
-        output.should.have('span');
-        output.should.have(':contains(123)');
-        output.should.have('span:contains(123)');
-        output.should.have('div > span:contains(123)');
+        var output = mq(m('div', m('span', 123)))
+        output.should.have('span')
+        output.should.have(':contains(123)')
+        output.should.have('span:contains(123)')
+        output.should.have('div > span:contains(123)')
       })
 
       it('Should be able to parse boolean content', function() {
-        var output = mq(m('div', m('span', true)));
-        output.should.have('span');
-        output.should.have(':contains(true)');
-        output.should.have('span:contains(true)');
-        output.should.have('div > span:contains(true)');
+        var output = mq(m('div', m('span', true)))
+        output.should.have('span')
+        output.should.have(':contains(true)')
+        output.should.have('span:contains(true)')
+        output.should.have('div > span:contains(true)')
       })
     })
 
     describe('Should be able to parse attribute', function() {
       it('Should be able to parse basic attribute', function() {
-        var output = mq(m('div', [
-          m('input[disabled]'),
-          m('span[data-foo=bar]')
-        ]));
+        var output = mq(
+          m('div', [m('input[disabled]'), m('span[data-foo=bar]')])
+        )
 
-        output.should.have('[disabled]');
-        output.should.have('input[disabled]');
-        output.should.have('div > input[disabled]');
+        output.should.have('[disabled]')
+        output.should.have('input[disabled]')
+        output.should.have('div > input[disabled]')
 
-        output.should.have('[data-foo=bar]');
-        output.should.have('span[data-foo=bar]');
-        output.should.have('div > span[data-foo=bar]');
+        output.should.have('[data-foo=bar]')
+        output.should.have('span[data-foo=bar]')
+        output.should.have('div > span[data-foo=bar]')
       })
 
       it('Should be able to parse non-string attributes', function() {
-        var output = mq(m('div', m('input', {
-          checked: true,
-          disabled: false, 
-          number: 1234,
-          object: {},
-          array: [1,2,3,4]
-        })));
+        var output = mq(
+          m(
+            'div',
+            m('input', {
+              checked: true,
+              disabled: false,
+              number: 1234,
+              object: {},
+              array: [1, 2, 3, 4],
+            })
+          )
+        )
 
-        output.should.have('input[checked]');
-        output.should.have('input');
-        output.should.not.have('input[disabled]');
-        output.should.have('input[number=1234]');
-        output.should.have('input[object="[object Object]"]');
-        output.should.have('input[array="1,2,3,4"]');
+        output.should.have('input[checked]')
+        output.should.have('input')
+        output.should.not.have('input[disabled]')
+        output.should.have('input[number=1234]')
+        output.should.have('input[object="[object Object]"]')
+        output.should.have('input[array="1,2,3,4"]')
       })
     })
 
     describe('traverse from a parent to its children for sibling selectors', function() {
       it('adjacent sibling combinator ', function() {
-        let output = mq(m('div', [
-          m('div.first'),
-          m('div.second')
-        ]))
+        let output = mq(m('div', [m('div.first'), m('div.second')]))
 
         output.should.have('.first + .second')
         output.should.not.have('.second + .first')
       })
 
       it('general sibling combinator', function() {
-        let output = mq(m('div', [
-          m('span'),
-          m('p'),
-          m('span'),
-          m('a'),
-          m('span')
-        ]))
-
+        let output = mq(
+          m('div', [m('span'), m('p'), m('span'), m('a'), m('span')])
+        )
         expect(output.find('p ~ span').length).toEqual(2)
       })
     })
@@ -396,9 +403,9 @@ describe('null objects', function() {
     function view() {
       return m('div', [null, m('input'), null])
     }
-    mq({view}).should.have('input')
+    mq({ view }).should.have('input')
     expect(function() {
-      mq({view}).should.have('input')
+      mq({ view }).should.have('input')
     }).toNotThrow()
   })
 })
@@ -439,9 +446,11 @@ describe('autorender', function() {
     })
 
     it('should update boolean attributes', function() {
-      out = mq({view: function() {
-        return m('select', [m('option', { value: 'foo', selected: true })])
-      }})
+      out = mq({
+        view: function() {
+          return m('select', [m('option', { value: 'foo', selected: true })])
+        },
+      })
       out.should.have('option[selected]')
     })
   })
@@ -461,8 +470,8 @@ describe('autorender', function() {
       }
 
       const out = mq({
-        oninit: vnode => vnode.state.visible = true,
-        view
+        oninit: vnode => (vnode.state.visible = true),
+        view,
       })
       out.should.have('.visible')
       out.click('.visible')
@@ -478,7 +487,7 @@ describe('access root element', function() {
     function view() {
       return m('div', ['foo', 'bar'])
     }
-    const out = mq({view})
+    const out = mq({ view })
     expect(out.rootNode.tag).toEqual('div')
     expect(out.rootNode.children.length).toEqual(2)
     expect(out.rootNode.children[0].children).toEqual('foo')
@@ -910,7 +919,7 @@ describe('components', function() {
   describe('component with leading array', function() {
     it('should be able to query children within leading array component', function() {
       let comp1 = { view: () => m('.comp1', m(comp2)) }
-      let comp2 = { view: () => [ m('.comp2') ] }
+      let comp2 = { view: () => [m('.comp2')] }
       let output = mq(m(comp1))
       output.should.have('.comp1 .comp2') // Nope!
     })
@@ -958,17 +967,17 @@ describe('components', function() {
     })
   })
 
-  it('should not confuse component instance index on redraw', function () {
+  it('should not confuse component instance index on redraw', function() {
     let showFirst = true
 
     const first = { view: () => m('div.first') }
     const second = { view: () => m('div.second') }
 
-    var output = mq(m({
-      view: () => m('div', [
-        showFirst ? m(first) : m(second),
-      ]),
-    }))
+    var output = mq(
+      m({
+        view: () => m('div', [showFirst ? m(first) : m(second)]),
+      })
+    )
 
     output.should.have('div.first')
     output.should.not.have('div.second')
@@ -1038,4 +1047,3 @@ describe('keys', function() {
     out.should.have('.second')
   })
 })
-
