@@ -13,16 +13,9 @@ describe('mithril query', function() {
   describe('basic selection of things', function() {
     let el,
       out,
-      tagEl,
-      concatClassEl,
-      classEl,
-      idEl,
-      innerString,
-      dataAttr,
-      booleanEl
-    let devilEl, idClassEl, arrayOfArrays, rawHtml, numbah, disabled
-    let contentAsArray, contentAsDoubleArray
-    let msxOutput
+      tagEl, concatClassEl, classEl, idEl, innerString, dataAttr, booleanEl, unselected,
+      selected, devilEl, idClassEl, arrayOfArrays, rawHtml, numbah, disabled, contentAsArray,
+      contentAsDoubleArray, msxOutput
 
     beforeEach(function() {
       tagEl = m('span', 123)
@@ -34,6 +27,8 @@ describe('mithril query', function() {
       idClassEl = m('#three.three')
       arrayOfArrays = m('#arrayArray')
       disabled = m('[disabled]')
+      unselected = m('option', { selected: false })
+      selected = m('option', { selected: true })
       dataAttr = m('[data-foo=bar]')
       contentAsArray = m('.contentAsArray', m('.inner', [123, 'foobar']))
       contentAsDoubleArray = m('.contentAsDoubleArray', [['foobar']])
@@ -58,6 +53,8 @@ describe('mithril query', function() {
         msxOutput,
         contentAsArray,
         contentAsDoubleArray,
+        unselected,
+        selected
       ])
       out = mq(el)
     })
@@ -82,6 +79,8 @@ describe('mithril query', function() {
       expect(out.first('[disabled]')).toEqual(disabled)
       expect(out.first('[data-foo=bar]')).toEqual(dataAttr)
       expect(out.find('[data-foo=no]')).toEqual([])
+      expect(out.first('option[selected]')).toEqual(selected)
+      expect(out.find('option')).toEqual([unselected, selected])
     })
 
     it('should not throw when mixing keyed and unkeyed vnodes', function() {
@@ -175,15 +174,16 @@ describe('mithril query', function() {
 
       it('Should be able to parse non-string attributes', function() {
         var output = mq(m('div', m('input', {
-          checked: true, 
+          checked: true,
           disabled: false, 
           number: 1234,
           object: {},
           array: [1,2,3,4]
         })));
 
-        output.should.have('input[checked=true]');
-        output.should.have('input[disabled=false]');
+        output.should.have('input[checked]');
+        output.should.have('input');
+        output.should.not.have('input[disabled]');
         output.should.have('input[number=1234]');
         output.should.have('input[object="[object Object]"]');
         output.should.have('input[array="1,2,3,4"]');
