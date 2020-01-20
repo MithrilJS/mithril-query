@@ -66,7 +66,10 @@ function isFunction(thing) {
 }
 
 function isClass(thing) {
-  return typeof thing === 'function' && /^\s*class\s+/.test(thing.toString())
+  return typeof thing === 'function' && (
+    /^\s*class\s/.test(thing.toString()) || // ES6 class
+    /^\s*_classCallCheck\(/.test(thing.toString().replace(/^[^{]+{/, '')) // Babel class
+  )
 }
 
 function call(thing) {
