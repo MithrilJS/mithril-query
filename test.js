@@ -6,6 +6,7 @@ const mTrust = require('mithril/render/trust')
 const mq = require('./')
 const keyCode = require('yields-keycode')
 const expect = require('expect')
+const BabelClassComponent = require('./fixtures/babel-class-component')
 
 function noop() {}
 
@@ -676,6 +677,11 @@ describe('components', function() {
       }
       const out = mq(ES6Component)
       out.onremove()
+    })
+
+    it('should work with components transpiled with Babel', function() {
+      const out = mq(BabelClassComponent)
+      out.should.have('div:contains(hello)')
     })
   })
 
