@@ -65,8 +65,25 @@ function isFunction(thing) {
   return typeof thing === 'function' && !isClass(thing)
 }
 
+function isBabelTranspiledClass(thing) {
+  const code = thing.toString().replace(/^[^{]+{/, '')
+
+  return (
+    // Regular Babel transpiled class
+    /(?:^|\s+)_classCallCheck\(/.test(code) ||
+    // Babel with @babel/transform-runtime and Webpack
+    /(?:^|\s+)_[^\s]+_classCallCheck__[^\s()]+\(/.test(code) ||
+    // Babel with @babel/transform-runtime (useESModules: true) and Webpack
+    /(?:^|\s+)Object\(_[^\s]+_classCallCheck__[^\s()]+\)\(/.test(code)
+  )
+}
+
+
 function isClass(thing) {
-  return typeof thing === 'function' && /^\s*class\s+/.test(thing.toString())
+  return typeof thing === 'function' && (
+    /^\s*class\s/.test(thing.toString()) || // ES6 class
+    isBabelTranspiledClass(thing) // Babel class
+  )
 }
 
 function call(thing) {

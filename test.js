@@ -6,6 +6,12 @@ const mTrust = require('mithril/render/trust')
 const mq = require('./')
 const keyCode = require('yields-keycode')
 const expect = require('expect')
+const BabelClassComponent = require('./fixtures/babel-class-component')
+const BabelClassComponentWithDestructuring = require('./fixtures/babel-class-component-with-destructuring')
+const WebpackBabelClassComponent = require('./fixtures/webpack-babel-transform-class-component')
+const WebpackBabelClassComponentWithDestructuring = require('./fixtures/webpack-babel-transform-class-component-with-destructuring')
+const WebpackBabelClassEsComponent = require('./fixtures/webpack-babel-transform-class-component-esmodules')
+const WebpackBabelClassEsComponentWithDestructuring = require('./fixtures/webpack-babel-transform-class-component-esmodules-with-destructuring')
 
 function noop() {}
 
@@ -676,6 +682,38 @@ describe('components', function() {
       }
       const out = mq(ES6Component)
       out.onremove()
+    })
+  })
+
+  describe('babel transpiled es6 class components', function() {
+    it('should work with simple components', function() {
+      const out = mq(BabelClassComponent)
+      out.should.have('div:contains(hello)')
+    })
+
+    it('should work with components with destructured options', function() {
+      const out = mq(BabelClassComponentWithDestructuring)
+      out.should.have('div:contains(hello)')
+    })
+
+    it('should work with transformed components in Webpack', function() {
+      const out = mq(WebpackBabelClassComponent)
+      out.should.have('div:contains(hello)')
+    })
+
+    it('should work with transformed components with destructured options in Webpack', function() {
+      const out = mq(WebpackBabelClassComponentWithDestructuring)
+      out.should.have('div:contains(hello)')
+    })
+
+    it('should work with transformed (useESModules) components in Webpack', function() {
+      const out = mq(WebpackBabelClassEsComponent)
+      out.should.have('div:contains(hello)')
+    })
+
+    it('should work with transformed (useESModules) components with destructured options in Webpack', function() {
+      const out = mq(WebpackBabelClassEsComponentWithDestructuring)
+      out.should.have('div:contains(hello)')
     })
   })
 
