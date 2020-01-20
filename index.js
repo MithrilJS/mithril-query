@@ -72,7 +72,9 @@ function isBabelTranspiledClass(thing) {
     // Regular Babel transpiled class
     /(?:^|\s+)_classCallCheck\(/.test(code) ||
     // Babel with @babel/transform-runtime and Webpack
-    /(?:^|\s+)_[^\s]+_classCallCheck__[^\s(]+\(/.test(code)
+    /(?:^|\s+)_[^\s]+_classCallCheck__[^\s()]+\(/.test(code) ||
+    // Babel with @babel/transform-runtime (useESModules: true) and Webpack
+    /(?:^|\s+)Object\(_[^\s]+_classCallCheck__[^\s()]+\)\(/.test(code)
   )
 }
 
