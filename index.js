@@ -169,10 +169,11 @@ function renderComponents(states, onremovers) {
     }
 
     if (!states[treePath]) {
-      component.state = component.instance
       if (component.instance.oninit) {
         component.instance.oninit(component)
-        states[treePath] = component.state
+      }
+      if (component.instance.oncreate) {
+        component.instance.oncreate(component)
       }
       if (component.instance.onremove) {
         onremovers.push(function() {
@@ -183,12 +184,14 @@ function renderComponents(states, onremovers) {
         component.instance._captureVnode(component)
       }
     } else {
-      component.state = states[treePath]
+      component.instance = states[treePath]
       if (component.instance.onupdate) {
         component.instance.onupdate(component)
       }
     }
-    return component.instance.view(component)
+    const view = component.instance.view(component)
+    states[treePath] = component.instance
+    return view
   }
 
   return function renderNode(parent, node, treePath) {
