@@ -53,6 +53,10 @@ function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]'
 }
 
+function isVNode(thing) {
+  return typeof thing === 'object' && thing.tag
+}
+
 function isComponent(thing) {
   return (
     (thing && (typeof thing === 'object' && thing.view)) ||
@@ -78,11 +82,11 @@ function isBabelTranspiledClass(thing) {
   )
 }
 
-
 function isClass(thing) {
-  return typeof thing === 'function' && (
-    /^\s*class\s/.test(thing.toString()) || // ES6 class
-    isBabelTranspiledClass(thing) // Babel class
+  return (
+    typeof thing === 'function' &&
+    (/^\s*class\s/.test(thing.toString()) || // ES6 class
+      isBabelTranspiledClass(thing)) // Babel class
   )
 }
 
@@ -157,7 +161,7 @@ function join(arrays) {
   }, [])
 }
 
-function renderComponents(states, onremovers) {
+function renderComponents(states, domNodes, onremovers, createElement) {
   function renderComponent(component, treePath) {
     if (isFunction(component.tag)) {
       component.instance = component.tag(component)
@@ -167,12 +171,12 @@ function renderComponents(states, onremovers) {
     } else {
       component.instance = copyObj(component.tag)
     }
-
-    if (!states[treePath]) {
-      component.state = component.instance
+    const isNew = !states[treePath]
+    if (isNew) {
+      states[treePath] = { ...component.instance }
+      Object.defineProperty(component, 'state', { get: () => states[treePath] })
       if (component.instance.oninit) {
         component.instance.oninit(component)
-        states[treePath] = component.state
       }
       if (component.instance.onremove) {
         onremovers.push(function() {
@@ -183,53 +187,73 @@ function renderComponents(states, onremovers) {
         component.instance._captureVnode(component)
       }
     } else {
-      component.state = states[treePath]
+      Object.defineProperty(component, 'state', { get: () => states[treePath] })
       if (component.instance.onupdate) {
         component.instance.onupdate(component)
       }
     }
-    return component.instance.view(component)
+    const node = component.instance.view(component)
+    component.dom = domNodes[treePath]
+    if (isNew && component.instance.oncreate) {
+      component.instance.oncreate(component)
+    }
+    return node
   }
 
   return function renderNode(parent, node, treePath) {
     if (!node) {
       return ''
     }
+    treePath = treePath + PD + (node.key || '')
     if (isArray(node)) {
       return node.map(function(subnode, index) {
         return renderNode(parent, subnode, treePath + PD + index)
       })
     }
     if (isComponent(node.tag)) {
-      const componentTreePath = treePath + PD + (node.key || '')
-      return renderNode(
-        parent,
-        renderComponent(node, componentTreePath),
-        componentTreePath
-      )
+      return renderNode(parent, renderComponent(node, treePath), treePath)
     }
 
     if (node.children) {
       validateKeys(node.children)
-      node.renderedChildren = renderNode(
-        node,
-        node.children,
-        treePath + PD + (node.key || '')
-      )
+      node.renderedChildren = renderNode(node, node.children, treePath)
     }
 
     if (isString(node.tag)) {
       node.parent = parent
     }
 
+    if (isVNode(node)) {
+      if (!states[treePath]) {
+        node.state = states[treePath] = {}
+        if (node.attrs && node.attrs.oninit) {
+          node.attrs.oninit(node)
+        }
+        node.dom = domNodes[treePath] = createElement(node)
+        if (node.attrs && node.attrs.oncreate) {
+          node.attrs.oncreate(node)
+        }
+      } else if (node.attrs && node.attrs.onupdate) {
+        node.dom = domNodes[treePath]
+        node.state = states[treePath]
+        node.attrs.onupdate(node)
+      }
+    }
+
     return node
   }
 }
 
-function scan(render) {
+function scan(render, createElement) {
   const states = {}
+  const domNodes = {}
   const onremovers = []
-  const renderNode = renderComponents(states, onremovers)
+  const renderNode = renderComponents(
+    states,
+    domNodes,
+    onremovers,
+    createElement
+  )
   const api = {
     onremovers,
     redraw() {
@@ -446,7 +470,8 @@ function scan(render) {
   return api
 }
 
-function init(viewOrComponentOrRootNode, nodeOrAttrs) {
+function init(viewOrComponentOrRootNode, nodeOrAttrs, { createElement } = {}) {
+  createElement = createElement || (() => ({}))
   let api = {}
   if (isComponent(viewOrComponentOrRootNode)) {
     api = scan(function(api) {
@@ -454,12 +479,10 @@ function init(viewOrComponentOrRootNode, nodeOrAttrs) {
         api.vnode = vnode
       }
       return m(viewOrComponentOrRootNode, nodeOrAttrs)
-    })
+    }, createElement)
   } else {
     // assume that first argument is rendered view
-    api = scan(function() {
-      return viewOrComponentOrRootNode
-    })
+    api = scan(() => viewOrComponentOrRootNode, createElement)
   }
   api.onremove = function() {
     api.onremovers.filter(isFunction).map(call)

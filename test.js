@@ -6,6 +6,7 @@ const mTrust = require('mithril/render/trust')
 const mq = require('./')
 const keyCode = require('yields-keycode')
 const expect = require('expect')
+const ospec = require('ospec')
 const BabelClassComponent = require('./fixtures/babel-class-component')
 const BabelClassComponentWithDestructuring = require('./fixtures/babel-class-component-with-destructuring')
 const WebpackBabelClassComponent = require('./fixtures/webpack-babel-transform-class-component')
@@ -423,11 +424,9 @@ describe('autorender', function() {
     beforeEach(function() {
       const component = {
         oninit(vnode) {
-          vnode.state = {
-            visible: true,
-            toggleMe() {
-              vnode.state.visible = !vnode.state.visible
-            },
+          vnode.state.visible = true
+          vnode.state.toggleMe = function() {
+            vnode.state.visible = !vnode.state.visible
           }
         },
         view(vnode) {
@@ -506,15 +505,12 @@ describe('trigger keyboard events', function() {
     const component = {
       updateSpy: noop,
       oninit(vnode) {
-        vnode.state = {
-          visible: true,
-          update(event) {
-            if (event.keyCode === 123) vnode.state.visible = false
-            if (event.keyCode === keyCode('esc')) vnode.state.visible = true
-            component.updateSpy(event)
-          },
+        vnode.state.visible = true
+        vnode.state.update = event => {
+          if (event.keyCode === 123) vnode.state.visible = false
+          if (event.keyCode === keyCode('esc')) vnode.state.visible = true
+          component.updateSpy(event)
         }
-        return vnode.state
       },
       view(vnode) {
         return m(
@@ -545,10 +541,45 @@ describe('trigger keyboard events', function() {
   })
 })
 
-describe('onremove', function() {
-  it('should not throw when init with rendered view', function() {
-    const out = mq(m('span', 'random stuff'))
-    expect(out.onremove).toNotThrow
+describe('lifecycles', function() {
+  describe('oncreate/onupdate of vnodes', function() {
+    it('should run oncreate', function() {
+      const oncreate = ospec.spy()
+      const onupdate = ospec.spy()
+      const out = mq(m('span', { oncreate, onupdate }, 'random stuff'))
+      expect(oncreate.callCount).toBe(1)
+      expect(onupdate.callCount).toBe(0)
+      out.redraw()
+      expect(oncreate.callCount).toBe(1)
+      expect(onupdate.callCount).toBe(1)
+      out.redraw()
+      expect(oncreate.callCount).toBe(1)
+      expect(onupdate.callCount).toBe(2)
+    })
+  })
+
+  describe('oncreate/onupdate of components', function() {
+    it('should run oncreate', function() {
+      const oncreate = ospec.spy()
+      const onupdate = ospec.spy()
+      const component = { view: () => 'comp', oncreate, onupdate }
+      const out = mq(m(component))
+      expect(oncreate.callCount).toBe(1)
+      expect(onupdate.callCount).toBe(0)
+      out.redraw()
+      expect(oncreate.callCount).toBe(1)
+      expect(onupdate.callCount).toBe(1)
+      out.redraw()
+      expect(oncreate.callCount).toBe(1)
+      expect(onupdate.callCount).toBe(2)
+    })
+  })
+
+  describe('onremove', function() {
+    it('should not throw when init with rendered view', function() {
+      const out = mq(m('span', 'random stuff'))
+      expect(out.onremove).toNotThrow
+    })
   })
 })
 
@@ -558,10 +589,8 @@ describe('components', function() {
   beforeEach(function() {
     myComponent = {
       oninit(vnode) {
-        vnode.state = {
-          foo: vnode.attrs.data || 'bar',
-          firstRender: true,
-        }
+        vnode.state.foo = vnode.attrs.data || 'bar'
+        vnode.state.firstRender = true
       },
       onupdate(vnode) {
         vnode.state.firstRender = false
@@ -580,10 +609,8 @@ describe('components', function() {
     ES6Component = class {
       oninit(vnode) {
         this.hello = 'hello'
-        vnode.state = {
-          foo: vnode.attrs.data || 'bar',
-          firstRender: true,
-        }
+        vnode.state.foo = vnode.attrs.data || 'bar'
+        vnode.state.firstRender = true
       }
       onupdate(vnode) {
         vnode.state.firstRender = false
@@ -963,7 +990,7 @@ describe('components', function() {
     })
   })
 
-  describe('initialisation', function() {
+  describe('initialization', function() {
     it('should copy init args to state', function() {
       const myComponent = {
         label: 'foobar',
