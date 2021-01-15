@@ -82,34 +82,25 @@ describe('mithril query', function() {
     })
 
     it('should allow to select by selectors', function() {
-      expect(out.first('span')).toEqual(tagEl)
-      expect(out.first('.one')).toEqual(classEl)
-      expect(out.first('div > .one')).toEqual(classEl)
-      expect(out.first('.two.one')).toEqual(classEl)
-      expect(out.first('#two')).toEqual(idEl)
-      expect(out.first('div#two')).toEqual(idEl)
-      expect(out.first('.three#three')).toEqual(idClassEl)
-      expect(out.first(':contains(DEVIL)')).toEqual(devilEl)
-      expect(out.first('#arrayArray')).toEqual(arrayOfArrays)
-      expect(out.first(':contains(123)')).toEqual(tagEl)
-      expect(out.first(':contains(true)')).toEqual(booleanEl)
-      expect(out.first(':contains(Inner String)').attrs.className).toEqual(
-        'root'
-      )
+      out.should.have('span')
+      out.should.have('.one')
+      out.should.have('div > .one')
+      out.should.have('.two.one')
+      out.should.have('#two')
+      out.should.have('div#two')
+      out.should.have('.three#three')
+      out.should.have(':contains(DEVIL)')
+      out.should.have('#arrayArray')
+      out.should.have(':contains(123)')
+      out.should.have(':contains(true)')
+      out.should.have(':contains(Inner String)')
       out.should.have('.contentAsArray :contains(123foobar)')
       out.should.have('.contentAsDoubleArray:contains(foobar)')
-      expect(out.first('[disabled]')).toEqual(disabled)
-      expect(out.first('[data-foo=bar]')).toEqual(dataAttr)
-      expect(out.find('[data-foo=no]')).toEqual([])
-      expect(out.first('option[selected]')).toEqual(selected)
-      expect(out.find('option')).toEqual([unselected, selected])
-    })
-
-    it('should not throw when mixing keyed and unkeyed vnodes', function() {
-      const mixedKeyNode = m('ul', [m('li', { key: 1 }), m('li')])
-      expect(function() {
-        mq(mixedKeyNode)
-      }).toThrow()
+      out.should.have('[disabled]')
+      out.should.have('[data-foo=bar]')
+      out.should.not.have('[data-foo=no]')
+      out.should.have('option[selected]')
+      out.should.have(2, 'option')
     })
 
     it('Should be able to parse identifier', function() {
@@ -275,14 +266,6 @@ describe('mithril query', function() {
       }
       out.setValue('#eventEl', 'huhu')
     })
-
-    it('should allow sending custom events', function(done) {
-      events.myCustomEvent = function(event) {
-        expect(event).toBe('pop')
-        done()
-      }
-      out.trigger('#eventEl', 'myCustomEvent', 'pop')
-    })
   })
 
   describe('contains', function() {
@@ -442,9 +425,10 @@ describe('autorender', function() {
       out = mq(component)
     })
 
-    it('should autorender', function() {
+    it('should autorender', async function() {
       out.should.have('.visible')
       out.click('.visible')
+      out.should.not.have('.visible')
       out.should.have('.hidden')
       out.click('.hidden', null, true)
       out.should.have('.hidden')
@@ -489,14 +473,9 @@ describe('autorender', function() {
 
 describe('access root element', function() {
   it('should be possible to access root element', function() {
-    function view() {
-      return m('div', ['foo', 'bar'])
-    }
-    const out = mq({ view })
-    expect(out.rootNode.tag).toEqual('div')
-    expect(out.rootNode.children.length).toEqual(2)
-    expect(out.rootNode.children[0].children).toEqual('foo')
-    expect(out.rootNode.children[1].children).toEqual('bar')
+    const out = mq(m('div', ['foo', 'bar']))
+    expect(out.rootEl.children[0].tagName).toEqual('DIV')
+    expect(out.rootEl.children[0].textContent).toEqual('foobar')
   })
 })
 
@@ -592,7 +571,7 @@ describe('components', function() {
         vnode.state.foo = vnode.attrs.data || 'bar'
         vnode.state.firstRender = true
       },
-      onupdate(vnode) {
+      onbeforeupdate(vnode) {
         vnode.state.firstRender = false
       },
       view(vnode) {
@@ -612,7 +591,7 @@ describe('components', function() {
         vnode.state.foo = vnode.attrs.data || 'bar'
         vnode.state.firstRender = true
       }
-      onupdate(vnode) {
+      onbeforeupdate(vnode) {
         vnode.state.firstRender = false
       }
       view(vnode) {
@@ -908,21 +887,14 @@ describe('components', function() {
 
   describe('state', function() {
     it('should preserve components state', function() {
-      out = mq(m('div', m(myComponent, 'haha')))
+      out = mq({ view: () => m('div', m(myComponent, 'haha')) })
       out.should.have('aside.firstRender')
       out.redraw()
       out.should.not.have('aside.firstRender')
     })
 
     it('should preserve es6 component state', function() {
-      out = mq(m('div', m(ES6Component, 'haha')))
-      out.should.have('aside.firstRender')
-      out.redraw()
-      out.should.not.have('aside.firstRender')
-    })
-
-    it('should preserve es6 instantiated component state', function() {
-      out = mq(m('div', m(new ES6Component(), 'haha')))
+      out = mq({ view: () => m('div', m(ES6Component, 'haha')) })
       out.should.have('aside.firstRender')
       out.redraw()
       out.should.not.have('aside.firstRender')
@@ -931,21 +903,14 @@ describe('components', function() {
 
   describe('state with multiple of same elements', function() {
     it('should preserve components state for every used component', function() {
-      out = mq(m('div', [m(myComponent), m(myComponent)]))
+      out = mq({ view: () => m('div', [m(myComponent), m(myComponent)]) })
       out.should.have(2, 'aside.firstRender')
       out.redraw()
       out.should.not.have('aside.firstRender')
     })
 
     it('should preserve es6 component state with multiples of the same element', function() {
-      out = mq(m('div', [m(ES6Component), m(ES6Component)]))
-      out.should.have(2, 'aside.firstRender')
-      out.redraw()
-      out.should.not.have('aside.firstRender')
-    })
-
-    it('should preserve es6 instantiated component state with multiples of the same elements', function() {
-      out = mq(m('div', [m(new ES6Component()), m(new ES6Component())]))
+      out = mq({ view: () => m('div', [m(ES6Component), m(ES6Component)]) })
       out.should.have(2, 'aside.firstRender')
       out.redraw()
       out.should.not.have('aside.firstRender')
@@ -1038,20 +1003,18 @@ describe('components', function() {
     const first = { view: () => m('div.first') }
     const second = { view: () => m('div.second') }
 
-    var output = mq(
-      m({
-        view: () => m('div', [showFirst ? m(first) : m(second)]),
-      })
-    )
+    var output = mq({
+      view: () => m('div', [showFirst ? m(first) : m(second)]),
+    })
 
     output.should.have('div.first')
     output.should.not.have('div.second')
 
-    showFirst = !showFirst
+    showFirst = false
     output.redraw()
 
-    output.should.have('div.second')
     output.should.not.have('div.first')
+    output.should.have('div.second')
   })
 })
 
@@ -1059,10 +1022,10 @@ describe('Logging', function() {
   it('should log', function(done) {
     const span = m('span', m('strong.tick', 'huhu'), m('em#tack', 'haha'))
     function logFn(nodes) {
-      expect(nodes).toEqual([span])
+      expect(nodes.length).toEqual(1)
       done()
     }
-    const out = mq(m('div', span, m('.bla', 'blup')))
+    const out = mq({ view: () => m('div', span, m('.bla', 'blup')) })
     out.log('span', logFn)
   })
 })
@@ -1071,18 +1034,6 @@ describe('Elements with nested arrays', function() {
   it('should flatten', function() {
     mq(m('.foo', ['bar', [m('.baz')]])).should.have('.foo .baz')
     mq(m('.foo', [[m('bar')]])).should.have('.foo bar')
-  })
-})
-
-describe('Exposing vnode', function() {
-  it('should expose vnode of root component', function() {
-    const myComponent = {
-      view(vnode) {
-        vnode.state.baz = 'foz'
-      },
-    }
-    const out = mq(myComponent)
-    expect(out.vnode.state.baz).toEqual('foz')
   })
 })
 

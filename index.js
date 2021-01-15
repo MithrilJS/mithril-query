@@ -1,64 +1,22 @@
 'use strict'
 
 const m = require('mithril/render/hyperscript')
-const cssauron = require('cssauron')
+const domino = require('domino')
 const code = require('yields-keycode')
+const Vnode = require('mithril/render/vnode')
 
 const PD = '//'
 
-function copyObj(data) {
-  return Object.assign(Object.create(Object.getPrototypeOf(data)), data)
-}
-
-function identity(thing) {
-  return thing
-}
-
-function isBoolean(thing) {
-  return typeof thing === 'boolean'
-}
-
 function isString(thing) {
   return Object.prototype.toString.call(thing) === '[object String]'
-}
-
-function isNumber(thing) {
-  return typeof thing === 'number'
-}
-
-function isStringOrNumber(thing) {
-  return isString(thing) || isNumber(thing)
-}
-
-function getContent(thing) {
-  if (!thing) {
-    return ''
-  }
-  if (isString(thing)) {
-    return thing
-  }
-  if (isNumber(thing)) {
-    return '' + thing
-  }
-  if (thing.tag === '#' || thing.tag === '[') {
-    return getContent(thing.children)
-  }
-  if (isArray(thing)) {
-    return thing.map(getContent).join('')
-  }
-  return ''
 }
 
 function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]'
 }
 
-function isVNode(thing) {
-  return typeof thing === 'object' && thing.tag
-}
-
 function isComponent(thing) {
-  return (
+  return !!(
     (thing && (typeof thing === 'object' && thing.view)) ||
     isFunction(thing) ||
     isClass(thing)
@@ -90,10 +48,6 @@ function isClass(thing) {
   )
 }
 
-function call(thing) {
-  return thing()
-}
-
 function consoleLogFn(a) {
   const util = require('util')
   // eslint-disable-next-line no-console
@@ -105,210 +59,13 @@ function consoleLogFn(a) {
   )
 }
 
-function validateKeys(vnodes) {
-  const isKeyed = vnodes[0] != null && vnodes[0].key != null
-  for (var i = 1; i < vnodes.length; i++) {
-    if ((vnodes[i] != null && vnodes[i].key != null) !== isKeyed) {
-      throw new TypeError(
-        'Vnodes must either always have keys or never have keys!'
-      )
-    }
-  }
-}
-
-const language = cssauron({
-  tag: 'tag',
-  contents(node) {
-    const content = node.text == null ? '' : '' + node.text
-
-    if (isStringOrNumber(node.children) || isBoolean(node.children)) {
-      return '' + content + node.children
-    }
-
-    return '' + content + getContent(node.renderedChildren)
-  },
-  id(node) {
-    if (node.attrs) {
-      return node.attrs.id || ''
-    }
-    return ''
-  },
-  class(node) {
-    if (node.attrs) {
-      return node.attrs.className
-    }
-    return ''
-  },
-  parent: 'parent',
-  children(node) {
-    return node && isArray(node.renderedChildren)
-      ? node.renderedChildren.filter(identity)
-      : []
-  },
-  attr(node, attr) {
-    if (node.attrs) {
-      if (typeof node.attrs[attr] === 'boolean') {
-        return !!node.attrs[attr]
-      }
-      return node.attrs[attr] == null ? '' : '' + node.attrs[attr]
-    }
-  },
-})
-
-function join(arrays) {
-  return arrays.reduce(function(result, array) {
-    return result.concat(array)
-  }, [])
-}
-
-function renderComponents(states, domNodes, onremovers, createElement) {
-  function renderComponent(component, treePath) {
-    if (isFunction(component.tag)) {
-      component.instance = component.tag(component)
-    } else if (isClass(component.tag)) {
-      const Component = component.tag
-      component.instance = new Component(component)
-    } else {
-      component.instance = copyObj(component.tag)
-    }
-    const isNew = !states[treePath]
-    if (isNew) {
-      states[treePath] = { ...component.instance }
-      Object.defineProperty(component, 'state', { get: () => states[treePath] })
-      if (component.instance.oninit) {
-        component.instance.oninit(component)
-      }
-      if (component.instance.onremove) {
-        onremovers.push(function() {
-          component.instance.onremove(component)
-        })
-      }
-      if (component.instance._captureVnode) {
-        component.instance._captureVnode(component)
-      }
-    } else {
-      Object.defineProperty(component, 'state', { get: () => states[treePath] })
-      if (component.instance.onupdate) {
-        component.instance.onupdate(component)
-      }
-    }
-    const node = component.instance.view(component)
-    component.dom = domNodes[treePath]
-    if (isNew && component.instance.oncreate) {
-      component.instance.oncreate(component)
-    }
-    return node
-  }
-
-  return function renderNode(parent, node, treePath) {
-    if (!node) {
-      return ''
-    }
-    treePath = treePath + PD + (node.key || '')
-    if (isArray(node)) {
-      return node.map(function(subnode, index) {
-        return renderNode(parent, subnode, treePath + PD + index)
-      })
-    }
-    if (isComponent(node.tag)) {
-      return renderNode(parent, renderComponent(node, treePath), treePath)
-    }
-
-    if (node.children) {
-      validateKeys(node.children)
-      node.renderedChildren = renderNode(node, node.children, treePath)
-    }
-
-    if (isString(node.tag)) {
-      node.parent = parent
-    }
-
-    if (isVNode(node)) {
-      if (!states[treePath]) {
-        node.state = states[treePath] = {}
-        if (node.attrs && node.attrs.oninit) {
-          node.attrs.oninit(node)
-        }
-        node.dom = domNodes[treePath] = createElement(node)
-        if (node.attrs && node.attrs.oncreate) {
-          node.attrs.oncreate(node)
-        }
-      } else if (node.attrs && node.attrs.onupdate) {
-        node.dom = domNodes[treePath]
-        node.state = states[treePath]
-        node.attrs.onupdate(node)
-      }
-    }
-
-    return node
-  }
-}
-
-function scan(render, createElement) {
-  const states = {}
-  const domNodes = {}
-  const onremovers = []
-  const renderNode = renderComponents(
-    states,
-    domNodes,
-    onremovers,
-    createElement
-  )
-  const api = {
-    onremovers,
-    redraw() {
-      api.rootNode = renderNode(undefined, render(api), 'ROOT')
-    },
-  }
-  api.redraw()
-
+function scan(rootEl, api) {
   function find(selectorString, node) {
-    return select(language(selectorString))(node)
-  }
-
-  function select(matchesSelector) {
-    return function matches(node) {
-      if (!node) {
-        return []
-      }
-      if (isArray(node)) {
-        return join(
-          node.filter(identity).map(function(childNode) {
-            return matches(childNode)
-          })
-        )
-      }
-      const foundNodes = []
-      if (matchesSelector(node)) {
-        foundNodes.push(node)
-      }
-      if (
-        isBoolean(node.children) ||
-        isStringOrNumber(node.children) ||
-        !node.children
-      ) {
-        return foundNodes
-      }
-      node.renderedChildren.filter(identity).map(function(child) {
-        if (typeof child === 'string' || typeof child === 'number') {
-          return
-        }
-        child.parent = node
-        child.inspect = function() {
-          return {
-            tag: child.tag,
-            children: child.children,
-            text: child.text,
-            attrs: child.attrs,
-          }
-        }
-      })
-      return foundNodes.concat(matches(node.renderedChildren))
-    }
+    return Array.prototype.slice.call(node.querySelectorAll(selectorString))
   }
 
   function first(selector) {
-    const node = find(selector, api.rootNode)[0]
+    const node = rootEl.querySelector(selector)
     if (!node) {
       throw new Error('No element matches ' + selector)
     }
@@ -316,7 +73,7 @@ function scan(render, createElement) {
   }
 
   function has(selector) {
-    return find(selector, api.rootNode).length > 0
+    return find(selector, rootEl).length > 0
   }
 
   function contains(value, node) {
@@ -324,7 +81,7 @@ function scan(render, createElement) {
   }
 
   function shouldHaveAtLeast(minCount, selector) {
-    const actualCount = find(selector, api.rootNode).length
+    const actualCount = find(selector, rootEl).length
     if (actualCount < minCount) {
       throw new Error(
         'Wrong count of elements that matches "' +
@@ -345,7 +102,7 @@ function scan(render, createElement) {
         : shouldHaveAtLeast(1, expectedCount)
     }
 
-    const actualCount = find(selector, api.rootNode).length
+    const actualCount = find(selector, rootEl).length
     if (actualCount !== expectedCount) {
       throw new Error(
         'Wrong count of elements that matches "' +
@@ -372,37 +129,42 @@ function scan(render, createElement) {
   }
 
   function shouldContain(string) {
-    if (!contains(string, api.rootNode)) {
+    if (!contains(string, rootEl)) {
       throw new Error('Expected "' + string + '" not found!')
     }
     return true
   }
 
   function shouldNotContain(string) {
-    if (contains(string, api.rootNode)) {
+    if (contains(string, rootEl)) {
       throw new Error('Unexpected "' + string + '" found!')
     }
     return true
   }
 
   function setValue(selector, string, silent) {
-    const attrs = first(selector).attrs
+    const el = first(selector)
     const event = {
       currentTarget: { value: string },
       target: { value: string },
     }
-    attrs.oninput && attrs.oninput(event)
-    attrs.onchange && attrs.onchange(event)
-    attrs.onkeyup && attrs.onkeyup(event)
-    silent || api.redraw()
+    el.oninput && el.oninput(event)
+    el.onchange && el.onchange(event)
+    el.onkeyup && el.onkeyup(event)
+    if (!silent && event.redraw !== false) {
+      api.redraw()
+    }
   }
 
   function trigger(eventName) {
     return function(selector, event, silent) {
-      const attrs = first(selector).attrs
-      attrs[eventName](event)
-      silent = silent || (event && event.redraw === false)
-      silent || api.redraw()
+      event = event || {}
+      event.redraw = !silent
+      const el = first(selector)
+      el[eventName](event)
+      if (!silent && event.redraw !== false) {
+        api.redraw()
+      }
     }
   }
 
@@ -429,10 +191,10 @@ function scan(render, createElement) {
   api.first = first
   api.has = has
   api.contains = function(value) {
-    return contains(value, api.rootNode)
+    return contains(value, rootEl)
   }
   api.find = function(selector) {
-    return find(selector, api.rootNode)
+    return find(selector, rootEl)
   }
   api.setValue = setValue
   ;[
@@ -467,27 +229,33 @@ function scan(render, createElement) {
     logFn(api.find(selector))
     return api
   }
+
   return api
 }
 
-function init(viewOrComponentOrRootNode, nodeOrAttrs, { createElement } = {}) {
-  createElement = createElement || (() => ({}))
-  let api = {}
-  if (isComponent(viewOrComponentOrRootNode)) {
-    api = scan(function(api) {
-      viewOrComponentOrRootNode._captureVnode = function(vnode) {
-        api.vnode = vnode
-      }
-      return m(viewOrComponentOrRootNode, nodeOrAttrs)
-    }, createElement)
-  } else {
-    // assume that first argument is rendered view
-    api = scan(() => viewOrComponentOrRootNode, createElement)
+module.exports = function init(componentOrRootNode, nodeOrAttrs) {
+  const $window = domino.createWindow('')
+  const redrawService = require('mithril/api/redraw')($window)
+  let rootNode = {
+    view: () => {
+      return isComponent(componentOrRootNode)
+        ? m(componentOrRootNode, nodeOrAttrs)
+        : componentOrRootNode
+    },
   }
-  api.onremove = function() {
-    api.onremovers.filter(isFunction).map(call)
-  }
-  return api
-}
 
-module.exports = init
+  const redraw = () =>
+    redrawService.render($window.document.body, Vnode(rootNode))
+
+  redraw()
+
+  const onremove = () => {
+    rootNode = { view: () => {} }
+    redraw()
+  }
+  return scan($window.document.body, {
+    redraw,
+    onremove,
+    rootEl: $window.document.body,
+  })
+}

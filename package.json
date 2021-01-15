@@ -32,7 +32,7 @@
     "prettier": "1.13.7"
   },
   "dependencies": {
-    "cssauron": "1.4.0",
+    "domino": "2.1.6",
     "yields-keycode": "1.1.0"
   },
   "readmeFilename": "README.md",
