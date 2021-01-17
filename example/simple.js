@@ -1,4 +1,4 @@
-var m = require('mithril/hyperscript')
+const m = require('mithril')
 
 module.exports = {
   view: function() {

@@ -354,11 +354,9 @@ describe('autorender', function() {
 
     beforeEach(function() {
       const component = {
+        visible: true,
         oninit({ state }) {
-          state.visible = true
-          state.toggleMe = function() {
-            state.visible = !state.visible
-          }
+          state.toggleMe = () => (state.visible = !state.visible)
         },
         view({ state }) {
           return m(
@@ -373,7 +371,7 @@ describe('autorender', function() {
       out = mq(component)
     })
 
-    it('should autorender', async function() {
+    it('should autorender', function() {
       out.should.have('.visible')
       out.click('.visible')
       out.should.not.have('.visible')
