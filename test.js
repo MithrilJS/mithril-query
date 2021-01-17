@@ -462,17 +462,25 @@ describe('trigger keyboard events', function() {
 describe('lifecycles', function() {
   describe('oncreate/onupdate of vnodes', function() {
     it('should run oncreate', function() {
+      let i = 0
       const oncreate = ospec.spy()
       const onupdate = ospec.spy()
-      const out = mq(m('span', { oncreate, onupdate }, 'random stuff'))
+      const out = mq({
+        view: () => m('span', { oncreate, onupdate }, `random stuff ${i++}`),
+      })
       expect(oncreate.callCount).toBe(1)
+      expect(oncreate.args[0].dom.tagName).toBe('SPAN')
+      expect(oncreate.args[0].dom.textContent).toBe('random stuff 0')
+      expect(oncreate.args[0].dom.parentElement.tagName).toBe('BODY')
       expect(onupdate.callCount).toBe(0)
       out.redraw()
       expect(oncreate.callCount).toBe(1)
       expect(onupdate.callCount).toBe(1)
+      expect(onupdate.args[0].dom.textContent).toBe('random stuff 1')
       out.redraw()
       expect(oncreate.callCount).toBe(1)
       expect(onupdate.callCount).toBe(2)
+      expect(onupdate.args[0].dom.textContent).toBe('random stuff 2')
     })
   })
 
