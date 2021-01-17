@@ -56,7 +56,6 @@ describe('mithril query', function() {
       contentAsDoubleArray = m('.contentAsDoubleArray', [['foobar']])
       rawHtml = mTrust('<div class="trusted"></div>')
       numbah = 10
-      booleanEl = m('span', true)
       el = m('.root', [
         tagEl,
         concatClassEl,
@@ -92,7 +91,6 @@ describe('mithril query', function() {
       out.should.have(':contains(DEVIL)')
       out.should.have('#arrayArray')
       out.should.have(':contains(123)')
-      out.should.have(':contains(true)')
       out.should.have(':contains(Inner String)')
       out.should.have('.contentAsArray :contains(123foobar)')
       out.should.have('.contentAsDoubleArray:contains(foobar)')
@@ -155,14 +153,6 @@ describe('mithril query', function() {
         output.should.have('span:contains(123)')
         output.should.have('div > span:contains(123)')
       })
-
-      it('Should be able to parse boolean content', function() {
-        var output = mq(m('div', m('span', true)))
-        output.should.have('span')
-        output.should.have(':contains(true)')
-        output.should.have('span:contains(true)')
-        output.should.have('div > span:contains(true)')
-      })
     })
 
     describe('Should be able to parse attribute', function() {
@@ -221,50 +211,40 @@ describe('mithril query', function() {
   })
 
   describe('events', function() {
-    let out, events, eventEl
+    let out, onclick, onfocus, oninput, currentTarget
+
     beforeEach(function() {
-      events = {
-        onclick: noop,
-        onfocus: noop,
-      }
-      eventEl = m('input#eventEl', {
-        onclick(evt) {
-          events.onclick(evt)
-        },
-        onfocus(evt) {
-          events.onfocus(evt)
-        },
-        oninput(evt) {
-          events.oninput(evt)
-        },
-        myCustomEvent(evt) {
-          events.myCustomEvent(evt)
-        },
-      })
-      out = mq(m('.root', eventEl))
+      onclick = ospec.spy()
+      onfocus = ospec.spy()
+      oninput = ospec.spy(evt => (currentTarget = evt.currentTarget))
+      out = mq(
+        m('input#eventEl', {
+          onclick,
+          onfocus,
+          oninput,
+        })
+      )
     })
 
-    it('should react on click events', function(done) {
-      events.onclick = function() {
-        done()
-      }
+    it('should react on click events', function() {
       out.click('#eventEl')
+      expect(onclick.callCount).toBe(1)
     })
 
-    it('should react on focus events', function(done) {
-      events.onfocus = function() {
-        done()
-      }
+    it('should react on focus events', function() {
       out.focus('#eventEl')
+      expect(onfocus.callCount).toBe(1)
     })
 
-    it('should react on input events', function(done) {
-      events.oninput = function(event) {
-        expect(event.target.value).toBe('huhu')
-        expect(event.currentTarget.value).toBe('huhu')
-        done()
-      }
+    it('should react on input events', function() {
       out.setValue('#eventEl', 'huhu')
+      expect(oninput.callCount).toBe(1)
+      const evt = oninput.args[0]
+      expect(evt.target.value).toBe('huhu')
+
+      // evt.currentTarget seems to get garbage collected to early,
+      // so we save it in the event triggering phase and check the reference here
+      expect(currentTarget.value).toBe('huhu')
     })
   })
 
@@ -430,7 +410,7 @@ describe('autorender', function() {
       out.click('.visible')
       out.should.not.have('.visible')
       out.should.have('.hidden')
-      out.click('.hidden', null, true)
+      out.click('.hidden', { redraw: false })
       out.should.have('.hidden')
     })
 
@@ -465,7 +445,7 @@ describe('autorender', function() {
       out.should.have('.visible')
       out.click('.visible')
       out.should.have('.hidden')
-      out.click('.hidden', null, true)
+      out.click('.hidden', { redraw: false })
       out.should.have('.hidden')
     })
   })
@@ -503,13 +483,11 @@ describe('trigger keyboard events', function() {
     }
     const out = mq(component)
     component.updateSpy = function(event) {
-      expect(event.target.value).toEqual('foobar')
       expect(event.altKey).toBe(true)
       expect(event.shiftKey).toBe(true)
       expect(event.ctrlKey).toBe(false)
     }
     out.keydown('div', 'esc', {
-      target: { value: 'foobar' },
       altKey: true,
       shiftKey: true,
     })

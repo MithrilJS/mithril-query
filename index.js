@@ -2,6 +2,7 @@
 
 const m = require('mithril/render/hyperscript')
 const domino = require('domino')
+const Event = require('domino/lib/Event')
 const code = require('yields-keycode')
 const Vnode = require('mithril/render/vnode')
 
@@ -59,7 +60,9 @@ function consoleLogFn(a) {
   )
 }
 
-function scan(rootEl, api) {
+function scan(api) {
+  const rootEl = api.rootEl
+
   function find(selectorString, node) {
     return Array.prototype.slice.call(node.querySelectorAll(selectorString))
   }
@@ -142,35 +145,38 @@ function scan(rootEl, api) {
     return true
   }
 
-  function setValue(selector, string, silent) {
+  function setValue(selector, string, eventData = {}) {
     const el = first(selector)
-    const event = {
-      currentTarget: { value: string },
-      target: { value: string },
-    }
-    el.oninput && el.oninput(event)
-    el.onchange && el.onchange(event)
-    el.onkeyup && el.onkeyup(event)
-    if (!silent && event.redraw !== false) {
+    el.value = string
+    const inputEvent = new Event('input', eventData)
+    const changeEvent = new Event('change', eventData)
+    const keyupEvent = new Event('keyup', eventData)
+    el.dispatchEvent(inputEvent)
+    el.dispatchEvent(changeEvent)
+    el.dispatchEvent(keyupEvent)
+    if (
+      inputEvent.redraw !== false &&
+      changeEvent.redraw !== false &&
+      keyupEvent.redraw !== false
+    ) {
       api.redraw()
     }
   }
 
   function trigger(eventName) {
-    return function(selector, event, silent) {
-      event = event || {}
-      event.redraw = !silent
+    return function(selector, eventData) {
+      const event = new Event(eventName, eventData)
       const el = first(selector)
-      el[eventName](event)
-      if (!silent && event.redraw !== false) {
+      el.dispatchEvent(event)
+      if (event.redraw !== false) {
         api.redraw()
       }
     }
   }
 
   function triggerKey(eventName) {
-    const fire = trigger('on' + eventName)
-    return function handleEvent(selector, key, event, silent) {
+    const fire = trigger(eventName)
+    return function handleEvent(selector, key, eventData = {}) {
       const keyCode = isString(key) ? code(key) : key
       const defaultEvent = {
         altKey: false,
@@ -180,7 +186,7 @@ function scan(rootEl, api) {
         keyCode,
         which: keyCode,
       }
-      fire(selector, Object.assign({}, defaultEvent, event || {}), !!silent)
+      fire(selector, { ...defaultEvent, ...eventData })
     }
   }
 
@@ -207,10 +213,10 @@ function scan(rootEl, api) {
     'mouseout',
     'mouseenter',
     'mouseleave',
+    'contextmenu',
   ].map(function(eventName) {
-    api[eventName] = trigger('on' + eventName)
+    api[eventName] = trigger(eventName)
   })
-  api.contextMenu = trigger('contextmenu')
   api.keydown = triggerKey('keydown')
   api.keypress = triggerKey('keypress')
   api.keyup = triggerKey('keyup')
@@ -235,7 +241,7 @@ function scan(rootEl, api) {
 
 module.exports = function init(componentOrRootNode, nodeOrAttrs) {
   const $window = domino.createWindow('')
-  const redrawService = require('mithril/api/redraw')($window)
+  const render = require('mithril/render/render')($window)
   let rootNode = {
     view: () => {
       return isComponent(componentOrRootNode)
@@ -244,16 +250,15 @@ module.exports = function init(componentOrRootNode, nodeOrAttrs) {
     },
   }
 
-  const redraw = () =>
-    redrawService.render($window.document.body, Vnode(rootNode))
+  const redraw = () => render($window.document.body, Vnode(rootNode))
 
   redraw()
 
   const onremove = () => {
-    rootNode = { view: () => {} }
+    componentOrRootNode = null
     redraw()
   }
-  return scan($window.document.body, {
+  return scan({
     redraw,
     onremove,
     rootEl: $window.document.body,
