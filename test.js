@@ -281,90 +281,60 @@ describe('should style assertions', function() {
 
   it('should not throw when as expected', function() {
     expect(out.should.have('span')).toBe(true)
-    expect(function() {
-      out.should.have('span')
-    }).toNotThrow()
-    expect(function() {
-      out.should.have('.one')
-    }).toNotThrow()
+    expect(() => out.should.have('span')).toNotThrow()
+    expect(() => out.should.have('.one')).toNotThrow()
   })
 
   it('should throw when no element matches', function() {
-    expect(function() {
-      out.should.have('table')
-    }).toThrow()
+    expect(() => out.should.have('table')).toThrow()
   })
 
   it('should throw when count is not exact', function() {
-    expect(function() {
-      out.should.have(100, 'div')
-    }).toThrow()
+    expect(() => out.should.have(100, 'div')).toThrow()
   })
 
   it('should not throw when count is exact', function() {
-    expect(function() {
-      out.should.have(3, 'div')
-    }).toNotThrow()
+    expect(() => out.should.have(3, 'div')).toNotThrow()
   })
 
   it('should not throw when containing string', function() {
-    expect(function() {
-      out.should.contain('XXXXX')
-    }).toNotThrow()
+    expect(() => out.should.contain('XXXXX')).toNotThrow()
   })
 
   it('should not throw when expecting unpresence of unpresent', function() {
-    expect(function() {
-      out.should.not.have('table')
-    }).toNotThrow()
+    expect(() => out.should.not.have('table')).toNotThrow()
   })
 
   it('should throw when expecting unpresence of present', function() {
-    expect(function() {
-      out.should.not.have('span')
-    }).toThrow()
+    expect(() => out.should.not.have('span')).toThrow()
   })
 
   it('should throw when containing unexpected string', function() {
-    expect(function() {
-      out.should.not.contain('XXXXX')
-    }).toThrow()
+    expect(() => out.should.not.contain('XXXXX')).toThrow()
   })
 
   it('should not throw when not containing string as expected', function() {
-    expect(function() {
-      out.should.not.contain('FOOOO')
-    }).toNotThrow()
+    expect(() => out.should.not.contain('FOOOO')).toNotThrow()
   })
 
   it('should not throw when there are enough elements', function() {
-    expect(function() {
-      out.should.have.at.least(3, 'div')
-    }).toNotThrow()
+    expect(() => out.should.have.at.least(3, 'div')).toNotThrow()
   })
 
   it('should throw when not enough elements', function() {
-    expect(function() {
-      out.should.have.at.least(40000, 'div')
-    }).toThrow()
+    expect(() => out.should.have.at.least(40000, 'div')).toThrow()
   })
 
   it('should not throw when an array of selectors is present', function() {
-    expect(function() {
-      out.should.have(['div', '.one', '.two'])
-    }).toNotThrow()
+    expect(() => out.should.have(['div', '.one', '.two'])).toNotThrow()
   })
 
   it('should not throw when matching an empty array of selectors', function() {
-    expect(function() {
-      out.should.have([])
-    }).toNotThrow()
+    expect(() => out.should.have([])).toNotThrow()
   })
 
   it('should throw when at least a selector is not present', function() {
-    expect(function() {
-      out.should.have(['.one', 'table'])
-    }).toThrow()
+    expect(() => out.should.have(['.one', 'table'])).toThrow()
   })
 })
 
@@ -374,9 +344,7 @@ describe('null objects', function() {
       return m('div', [null, m('input'), null])
     }
     mq({ view }).should.have('input')
-    expect(function() {
-      mq({ view }).should.have('input')
-    }).toNotThrow()
+    expect(() => mq({ view }).should.have('input')).toNotThrow()
   })
 })
 
@@ -386,17 +354,17 @@ describe('autorender', function() {
 
     beforeEach(function() {
       const component = {
-        oninit(vnode) {
-          vnode.state.visible = true
-          vnode.state.toggleMe = function() {
-            vnode.state.visible = !vnode.state.visible
+        oninit({ state }) {
+          state.visible = true
+          state.toggleMe = function() {
+            state.visible = !state.visible
           }
         },
-        view(vnode) {
+        view({ state }) {
           return m(
-            vnode.state.visible ? '.visible' : '.hidden',
+            state.visible ? '.visible' : '.hidden',
             {
-              onclick: vnode.state.toggleMe,
+              onclick: state.toggleMe,
             },
             'Test'
           )
@@ -415,23 +383,19 @@ describe('autorender', function() {
     })
 
     it('should update boolean attributes', function() {
-      out = mq({
-        view: function() {
-          return m('select', [m('option', { value: 'foo', selected: true })])
-        },
-      })
+      out = mq(m('select', [m('option', { value: 'foo', selected: true })]))
       out.should.have('option[selected]')
     })
   })
 
   describe('autorerender function', function() {
     it('should autorender function', function() {
-      function view(vnode) {
+      function view({ state }) {
         return m(
-          vnode.state.visible ? '.visible' : '.hidden',
+          state.visible ? '.visible' : '.hidden',
           {
             onclick() {
-              vnode.state.visible = !vnode.state.visible
+              state.visible = !state.visible
             },
           },
           'Test'
@@ -439,7 +403,7 @@ describe('autorender', function() {
       }
 
       const out = mq({
-        oninit: vnode => (vnode.state.visible = true),
+        oninit: ({ state }) => (state.visible = true),
         view,
       })
       out.should.have('.visible')
@@ -461,37 +425,34 @@ describe('access root element', function() {
 
 describe('trigger keyboard events', function() {
   it('should be possible to trigger keyboard events', function() {
+    const updateSpy = ospec.spy()
     const component = {
-      updateSpy: noop,
-      oninit(vnode) {
-        vnode.state.visible = true
-        vnode.state.update = event => {
-          if (event.keyCode === 123) vnode.state.visible = false
-          if (event.keyCode === keyCode('esc')) vnode.state.visible = true
-          component.updateSpy(event)
+      visible: true,
+      oninit: ({ state }) => {
+        state.update = evt => {
+          if (evt.keyCode === 123) state.visible = false
+          if (evt.keyCode === keyCode('esc')) state.visible = true
+          updateSpy(evt)
         }
       },
-      view(vnode) {
+      view({ state }) {
         return m(
-          vnode.state.visible ? '.visible' : '.hidden',
-          {
-            onkeydown: vnode.state.update,
-          },
+          state.visible ? '.visible' : '.hidden',
+          { onkeydown: state.update },
           'describe'
         )
       },
     }
     const out = mq(component)
-    component.updateSpy = function(event) {
-      expect(event.altKey).toBe(true)
-      expect(event.shiftKey).toBe(true)
-      expect(event.ctrlKey).toBe(false)
-    }
     out.keydown('div', 'esc', {
       altKey: true,
       shiftKey: true,
     })
-    component.updateSpy = noop
+    expect(updateSpy.callCount).toBe(1)
+    const evt = updateSpy.args[0]
+    expect(evt.altKey).toBe(true)
+    expect(evt.shiftKey).toBe(true)
+    expect(evt.ctrlKey).toBe(false)
     out.should.have('.visible')
     out.keydown('div', 123)
     out.should.have('.hidden')
@@ -545,40 +506,40 @@ describe('components', function() {
 
   beforeEach(function() {
     myComponent = {
-      oninit(vnode) {
-        vnode.state.foo = vnode.attrs.data || 'bar'
-        vnode.state.firstRender = true
+      oninit({ state, attrs }) {
+        state.foo = attrs.data || 'bar'
+        state.firstRender = true
       },
-      onbeforeupdate(vnode) {
-        vnode.state.firstRender = false
+      onbeforeupdate({ state }) {
+        state.firstRender = false
       },
-      view(vnode) {
+      view({ state, attrs }) {
         return m(
           'aside',
           {
-            className: vnode.state.firstRender ? 'firstRender' : '',
+            className: state.firstRender ? 'firstRender' : '',
           },
-          [vnode.attrs.data, 'hello', vnode.state.foo]
+          [attrs.data, 'hello', state.foo]
         )
       },
     }
 
     ES6Component = class {
-      oninit(vnode) {
+      oninit({ state, attrs }) {
         this.hello = 'hello'
-        vnode.state.foo = vnode.attrs.data || 'bar'
-        vnode.state.firstRender = true
+        state.foo = attrs.data || 'bar'
+        state.firstRender = true
       }
-      onbeforeupdate(vnode) {
-        vnode.state.firstRender = false
+      onbeforeupdate({ state, attrs }) {
+        state.firstRender = false
       }
-      view(vnode) {
+      view({ state, attrs }) {
         return m(
           'aside',
           {
-            className: vnode.state.firstRender ? 'firstRender' : '',
+            className: state.firstRender ? 'firstRender' : '',
           },
-          [vnode.attrs.data, this.hello, vnode.state.foo]
+          [attrs.data, this.hello, state.foo]
         )
       }
     }
@@ -599,8 +560,8 @@ describe('components', function() {
 
     it('should work without oninit', function() {
       const simpleComponent = {
-        view(vnode) {
-          return m('span', vnode.attrs.data)
+        view({ attrs }) {
+          return m('span', attrs.data)
         },
       }
       out = mq(simpleComponent, { data: 'mega' })
@@ -618,10 +579,10 @@ describe('components', function() {
   })
 
   describe('closure components', function() {
-    function closureComponent(vnode) {
+    function closureComponent({ attrs }) {
       return {
         view() {
-          return m('div', 'Hello from ' + vnode.attrs.name)
+          return m('div', 'Hello from ' + attrs.name)
         },
       }
     }
@@ -652,8 +613,8 @@ describe('components', function() {
 
     it('should work without oninit', function() {
       class SimpleES6Component {
-        view(vnode) {
-          return m('div', 'Hello from ' + vnode.attrs.name)
+        view({ attrs }) {
+          return m('div', 'Hello from ' + attrs.name)
         }
       }
       out = mq(SimpleES6Component, { name: 'Homer' })
@@ -716,8 +677,8 @@ describe('components', function() {
 
     it('should work without oninit', function() {
       class SimpleES6Component {
-        view(vnode) {
-          return m('div', 'Hello from ' + vnode.attrs.name)
+        view({ attrs }) {
+          return m('div', 'Hello from ' + attrs.name)
         }
       }
       out = mq(new SimpleES6Component(), { name: 'Homer' })
@@ -757,8 +718,8 @@ describe('components', function() {
 
     it('should work without oninit', function() {
       const simpleComponent = {
-        view(vnode) {
-          return m('span', vnode.attrs.data)
+        view({ attrs }) {
+          return m('span', attrs.data)
         },
       }
       out = mq(m('div', m(simpleComponent, { data: 'mega' })))
@@ -802,8 +763,8 @@ describe('components', function() {
 
     it('should work without oninit', function() {
       class SimpleES6Component {
-        view(vnode) {
-          return m('span', vnode.attrs.data)
+        view({ attrs }) {
+          return m('span', attrs.data)
         }
       }
       out = mq(m('div', m(SimpleES6Component, { data: 'mega' })))
@@ -845,8 +806,8 @@ describe('components', function() {
 
     it('should work without oninit', function() {
       class SimpleES6Component {
-        view(vnode) {
-          return m('span', vnode.attrs.data)
+        view({ attrs }) {
+          return m('span', attrs.data)
         }
       }
       out = mq(m('div', m(new SimpleES6Component(), { data: 'mega' })))
@@ -937,8 +898,8 @@ describe('components', function() {
     it('should copy init args to state', function() {
       const myComponent = {
         label: 'foobar',
-        view(vnode) {
-          return m('div', vnode.state.label)
+        view({ state }) {
+          return m('div', state.label)
         },
       }
       out = mq(myComponent)
@@ -953,9 +914,9 @@ describe('components', function() {
         oninit() {
           oninit++
         },
-        view(vnode) {
+        view({ children }) {
           view++
-          return m('i', vnode.children)
+          return m('i', children)
         },
       }
 
