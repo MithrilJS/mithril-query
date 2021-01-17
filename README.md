@@ -13,47 +13,78 @@ Query mithril virtual dom for testing purposes
 
 ## Setup
 
-In order to run tests in mithril 1.0 we need to do some setup. That is to mock the dom for the mithril render and request modules.
+In order to run tests in mithril 2.x we need to do some setup. That is to mock the dom for the mithril render and request modules.
 This can be done by requiring a 'setup' file in your 'mocha' tests with the following contents.
 
 ```js
-global.window = Object.assign(require('mithril/test-utils/domMock.js')(), require('mithril/test-utils/pushStateMock')())
+global.window = Object.assign(
+  require('mithril/test-utils/domMock.js')(),
+  require('mithril/test-utils/pushStateMock')()
+)
+global.requestAnimationFrame = callback =>
+  global.setTimeout(callback, 1000 / 60)
 ```
+
+## Changes from version 3.x to 4.x
+
+#### Root state access
+
+... is gone, since `mithril` does not provide a way to access it
+
+#### Booleans
+
+... are now rendered as empty strings, like mithril does, because, well, mithril renders
+
+#### Lifecycles
+
+... are now fully supported, including synthetic DOM elements 🎉
+
+#### find/first
+
+... are now returning DOM elements instead of vdom nodes.
+
+#### Custom events
+
+... aren't supported anymore. Feel free to file a ticket, if you want them back.
 
 ## Usage
 
 You can run this tests serverside or use browserify and run them in browsers.
 
 ```js
-// simple module: simple.js
-var m = require('mithril')
+const m = require('mithril')
 
 module.exports = {
-  view: function () {
+  view: function() {
     return m('div', [
       m('span', 'spanContent'),
       m('#fooId', 'fooContent'),
-      m('.barClass', 'barContent')
+      m('.barClass', 'barContent'),
     ])
-  }
+  },
 }
 ```
 
 ```js
-// test for simple module: simple.test.js
 /* eslint-env mocha */
-global.window = Object.assign(require('mithril/test-utils/domMock.js')(), require('mithril/test-utils/pushStateMock')())
-var simpleModule = require('./simple')
-var mq = require('mithril-query')
+global.window = Object.assign(
+  require('mithril/test-utils/domMock.js')(),
+  require('mithril/test-utils/pushStateMock')()
+)
+global.requestAnimationFrame = callback =>
+  global.setTimeout(callback, 1000 / 60)
 
-describe('simple module', function () {
-  it('should generate appropriate output', function () {
+const simpleModule = require('./simple')
+const mq = require('../')
+
+describe('simple module', function() {
+  it('should generate appropriate output', function() {
     var output = mq(simpleModule)
     output.should.have('span')
     output.should.have('div > span')
     output.should.have('#fooId')
     output.should.have('.barClass')
-    output.should.have('.barClass:contains(barContent)')
+    output.should.have(':contains(barContent)')
     output.should.contain('barContent')
   })
 })
@@ -79,8 +110,8 @@ var out = mq(m('div'))
 
 // object component
 var myComponent = {
-  view: function (vnode) {
-    return m('div', vnode.attrs.text)
+  view: function ({ attrs }) {
+    return m('div', attrs.text)
   }
 }
 var out = mq(myComponent, { text: 'huhu' })
@@ -88,13 +119,12 @@ var out = mq(myComponent, { text: 'huhu' })
 // closure component
 function myComponent() {
   return {
-    view: function (vnode) {
-      return m('div', vnode.attrs.text)
+    view: function ({ attrs }) {
+      return m('div', attrs.text)
     }
   }
 }
 var out = mq(myComponent, { text: 'huhu' })
-
 ```
 
 ### Query API
@@ -103,8 +133,8 @@ As you can see `mq` returns an `out`-Object which has the following query-API.
 We use [cssauron](https://github.com/chrisdickinson/cssauron) as engine,
 so look there if you want to see, what `selector`s are possible.
 
-* `out.first(selector)` – Returns the first element that matches the selector.
-* `out.find(selector)` – Returns all elements that match the selector.
+* `out.first(selector)` – Returns the first element that matches the selector (think `document.querySelector`).
+* `out.find(selector)` – Returns all elements that match the selector (think `document.querySelectorAll`).
 * `out.has(selector)` –  Returns `true` if any element in tree matches the selector, otherwise `false`.
 * `out.contains(string)` – Returns `true` if any element in tree contains the string, otherwise `false`.
 * `out.log(selector, [logFN])` – Small helper function to log out what was selected. Mainly for debugging
@@ -131,54 +161,52 @@ It is also possible to trigger element events like `onfocus` and `onclick` and s
 
 Attention: Currently there is no event bubbleing supported.
 
-* `out.click(selector, [event], [silent])` – Runs `onclick` for first element that matches selector. Optional `event` is given
-as event. Options `silent`-Flag signals that no redraw should happen.
-`event.redraw = false` is respected.
-* `out.setValue(selector, string, [silent])` – Runs `oninput` and `onchange` for first element that matches selector. Event
-contains the value as `event.target.value` and `event.target.currentValue`.
-* `out.trigger(selector, eventname, [event], [silent])` – General purpose event triggerer. Calls `eventname` on first matching element giving `event` as event.
+* `out.click(selector, [eventData])` – Runs `onclick` for first element that matches selector. Optional `eventData` is given
+as to the event constructor. `eventData.redraw = false` is respected.
+* `out.setValue(selector, string, event)` – Runs `oninput` and `onchange` for first element that matches selector.
+* `out.trigger(selector, eventname, [eventData])` – General purpose event triggerer. Calls `eventname` on first matching element.
 
 It also supports key events
 
-* `out.keydown(selector, keycode, [event], [silent])` – calls `onkeydown` with `keycode`
-* `out.keydown(selector, keyname, [event], [silent])` – calse `onkeydown` with keycode mapped from name. Mapping is done with [this lib](https://github.com/npmcomponent/yields-keycode).
+* `out.keydown(selector, keycode, [eventData])` – calls `onkeydown` with `keycode`
+* `out.keydown(selector, keyname, [eventData])` – calse `onkeydown` with keycode mapped from name. Mapping is done with [this lib](https://github.com/npmcomponent/yields-keycode).
 
 `keyup`, `keypress` are supported as well.
 
 ### Auto "Redrawing"
 
-You can also use auto rendering like mithril does. If you call the query
-function with a module, it instantiates the module the same way as mithril does.
-When using one of the upper events, redraw of the view is automatically called.
+Since `mithril-query` uses `mithril` on a fake DOM, auto rendering works as expected.
 
 Example:
 
 ```js
   // module code
-  var module = {
-    oninit: function (vnode) {
-      vnode.state = {
-        visible: true,
-        toggleMe: function () { vnode.state.visible = !vnode.state.visible }
-      }
+  const component = {
+    visible: true
+    oninit({ state }) {
+      state.toggleMe = () => (state.visible = !state.visible)
     },
-    view: function (vnode) {
-      return m(vnode.state.visible ? '.visible' : '.hidden', {
-        onclick: vnode.state.toggleMe
-      }, 'Test')
-    }
+    view({ state }) {
+      return m(
+        state.visible ? '.visible' : '.hidden',
+        { onclick: state.toggleMe},
+        'Test'
+      )
+    },
   }
 
+
   // actual test
-  var out = mq(module)
+  out = mq(component)
   out.should.have('.visible')
   out.click('.visible')
+  out.should.not.have('.visible')
   out.should.have('.hidden')
-  out.click('.hidden', null, true)
+  out.click('.hidden', { redraw: false })
   out.should.have('.hidden')
 ```
 
-As you can see, you can prevent autoredraw by providing a `true` as last
+As you can see, you can prevent autoredraw by providing a `redraw: false` as last
 argument to `click` method.
 
 You can also manually trigger redraw:
@@ -194,20 +222,7 @@ out.redraw()
 If you need to access the rendered root element you can simply access it with
 
 ```javascript
-out.rootNode
-```
-
-If you've rendered a component it might be handy to access the vnode directly.
-This can be with `out.vnode`:
-
-```javascript
-var myComponent = {
-  view: function (vnode) {
-    vnode.state.baz = 'foz'
-  }
-}
-var out = mq(myComponent)
-expect(out.vnode.state.baz).toEqual('foz')
+out.rootEl
 ```
 
 ### `onremove` handling
