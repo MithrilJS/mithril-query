@@ -5,8 +5,7 @@ const domino = require('domino')
 const Event = require('domino/lib/Event')
 const code = require('yields-keycode')
 const Vnode = require('mithril/render/vnode')
-
-const PD = '//'
+const formatHtml = require('pretty-html-log').highlight
 
 function isString(thing) {
   return Object.prototype.toString.call(thing) === '[object String]'
@@ -49,15 +48,9 @@ function isClass(thing) {
   )
 }
 
-function consoleLogFn(a) {
-  const util = require('util')
+function consoleLogHtml(els) {
   // eslint-disable-next-line no-console
-  console.log(
-    util.inspect(a, {
-      colors: true,
-      depth: null,
-    })
-  )
+  console.log(els.map(el => formatHtml(el.outerHTML)).join('---------\n'))
 }
 
 function scan(api) {
@@ -231,7 +224,7 @@ function scan(api) {
     have: shouldHave,
     contain: shouldContain,
   }
-  api.log = function(selector, logFn = consoleLogFn) {
+  api.log = function(selector, logFn = consoleLogHtml) {
     logFn(api.find(selector))
     return api
   }

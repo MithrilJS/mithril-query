@@ -18,5 +18,6 @@ describe('simple module', function() {
     output.should.have('.barClass')
     output.should.have(':contains(barContent)')
     output.should.contain('barContent')
+    output.log('div');
   })
 })
