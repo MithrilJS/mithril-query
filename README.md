@@ -49,7 +49,7 @@ global.requestAnimationFrame = callback =>
 
 ## Usage
 
-You can run this tests serverside or use browserify and run them in browsers.
+You can run this tests server side or use browserify and run them in browsers.
 
 ```js
 const m = require('mithril')
@@ -100,7 +100,7 @@ Run the test with
 ### Initialise
 
 First call `mithril-query` with either a vnode or a component. You can call it
-with one extra argument wich will be used as `attrs` in the component case.
+with one extra argument which will be used as `attrs` in the component case.
 
 ```js
 var mq = require('mithril-query')
@@ -129,9 +129,7 @@ var out = mq(myComponent, { text: 'huhu' })
 
 ### Query API
 
-As you can see `mq` returns an `out`-Object which has the following query-API.
-We use [cssauron](https://github.com/chrisdickinson/cssauron) as engine,
-so look there if you want to see, what `selector`s are possible.
+As you can see `mq` returns an `out`-Object which has the following test-API.
 
 * `out.first(selector)` – Returns the first element that matches the selector (think `document.querySelector`).
 * `out.find(selector)` – Returns all elements that match the selector (think `document.querySelectorAll`).
@@ -139,9 +137,9 @@ so look there if you want to see, what `selector`s are possible.
 * `out.contains(string)` – Returns `true` if any element in tree contains the string, otherwise `false`.
 * `out.log(selector, [logFN])` – Small helper function to log out what was selected. Mainly for debugging
 purposes. You can give an optional function which is called with the result.
-It defaults to `console.log`.
+It defaults to HTML-Pretty-Printer ([pretty-html-log](https://www.npmjs.com/package/pretty-html-log)] that logs the HTML-representation to `stdout`.
 
-You can use these nice assertions. They throw errors if they're not fullfiled.
+You can use these nice assertions. They throw errors if they're not fulfilled.
 See the example in the example folder.
 
 * `out.should.have([count], selector)`
@@ -157,19 +155,19 @@ count does not match.
 
 ### Event triggering
 
-It is also possible to trigger element events like `onfocus` and `onclick` and set values on `<input>`-fields. This allows you to write "integration tests" that run also on serverside.
+It is also possible to trigger element events like `onfocus` and `onclick` and set values on `<input>`-fields. This allows you to write "integration tests" that run also on server side.
 
-Attention: Currently there is no event bubbleing supported.
+Attention: Currently there is no event bubbling supported.
 
 * `out.click(selector, [eventData])` – Runs `onclick` for first element that matches selector. Optional `eventData` is given
 as to the event constructor. `eventData.redraw = false` is respected.
-* `out.setValue(selector, string, event)` – Runs `oninput` and `onchange` for first element that matches selector.
+* `out.setValue(selector, string, [eventData])` – Runs `oninput` and `onchange` for first element that matches selector.
 * `out.trigger(selector, eventname, [eventData])` – General purpose event triggerer. Calls `eventname` on first matching element.
 
 It also supports key events
 
 * `out.keydown(selector, keycode, [eventData])` – calls `onkeydown` with `keycode`
-* `out.keydown(selector, keyname, [eventData])` – calse `onkeydown` with keycode mapped from name. Mapping is done with [this lib](https://github.com/npmcomponent/yields-keycode).
+* `out.keydown(selector, keyname, [eventData])` – calls `onkeydown` with keycode mapped from name. Mapping is done with [this lib](https://github.com/npmcomponent/yields-keycode).
 
 `keyup`, `keypress` are supported as well.
 
@@ -206,7 +204,7 @@ Example:
   out.should.have('.hidden')
 ```
 
-As you can see, you can prevent autoredraw by providing a `redraw: false` as last
+As you can see, you can prevent auto redraw by providing a `redraw: false` as last
 argument to `click` method.
 
 You can also manually trigger redraw:
@@ -227,4 +225,4 @@ out.rootEl
 
 ### `onremove` handling
 
-To trigger `onremove`-handlers of all initialised components, just call `out.onremove()`
+To trigger `onremove`-handlers of all initialized components, just call `out.onremove()`
