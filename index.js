@@ -206,6 +206,15 @@ function scan(api) {
     'mouseout',
     'mouseenter',
     'mouseleave',
+    'mousemove',
+    'pointerdown',
+    'pointerup',
+    'pointerover',
+    'pointerout',
+    'pointerenter',
+    'pointerleave',
+    'pointermove',
+    'pointercancel',
     'contextmenu',
   ].map(function(eventName) {
     api[eventName] = trigger(eventName)
