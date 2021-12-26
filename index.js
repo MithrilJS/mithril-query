@@ -1,7 +1,8 @@
 'use strict'
 
-const m = require('mithril/render/hyperscript')
 const domino = require('domino')
+ensureGlobals()
+const m = require('mithril')
 const Event = require('domino/lib/Event')
 const code = require('yields-keycode')
 const Vnode = require('mithril/render/vnode')
@@ -57,7 +58,7 @@ function scan(api) {
   const rootEl = api.rootEl
 
   function find(selectorString, node) {
-    return Array.prototype.slice.call(node.querySelectorAll(selectorString))
+    return Array.from(node.querySelectorAll(selectorString))
   }
 
   function first(selector) {
@@ -242,7 +243,7 @@ function scan(api) {
 }
 
 module.exports = function init(componentOrRootNode, nodeOrAttrs) {
-  const $window = domino.createWindow('')
+  const $window = global.window = domino.createWindow('')
   const render = require('mithril/render/render')($window)
   let rootNode = {
     view: () => {
@@ -266,3 +267,10 @@ module.exports = function init(componentOrRootNode, nodeOrAttrs) {
     rootEl: $window.document.body,
   })
 }
+
+function ensureGlobals() {
+  global.window = global.window || domino.createWindow('')
+  global.requestAnimationFrame = global.requestAnimationFrame || global.window.requestAnimationFrame 
+}
+
+module.exports.ensureGlobals = ensureGlobals

@@ -1,9 +1,8 @@
 /* eslint-env mocha */
 'use strict'
 
-const m = require('mithril/render/hyperscript')
-const mTrust = require('mithril/render/trust')
 const mq = require('./')
+const m = require('mithril')
 const keyCode = require('yields-keycode')
 const expect = require('expect')
 const ospec = require('ospec')
@@ -13,8 +12,6 @@ const WebpackBabelClassComponent = require('./fixtures/webpack-babel-transform-c
 const WebpackBabelClassComponentWithDestructuring = require('./fixtures/webpack-babel-transform-class-component-with-destructuring')
 const WebpackBabelClassEsComponent = require('./fixtures/webpack-babel-transform-class-component-esmodules')
 const WebpackBabelClassEsComponentWithDestructuring = require('./fixtures/webpack-babel-transform-class-component-esmodules-with-destructuring')
-
-function noop() {}
 
 describe('mithril query', function() {
   describe('basic selection of things', function() {
@@ -54,7 +51,7 @@ describe('mithril query', function() {
       dataAttr = m('[data-foo=bar]')
       contentAsArray = m('.contentAsArray', m('.inner', [123, 'foobar']))
       contentAsDoubleArray = m('.contentAsDoubleArray', [['foobar']])
-      rawHtml = mTrust('<div class="trusted"></div>')
+      rawHtml = m.trust('<div class="trusted"></div>')
       numbah = 10
       el = m('.root', [
         tagEl,
@@ -263,7 +260,7 @@ describe('mithril query', function() {
     describe('trusted content', function() {
       it('should allow to select by content', function() {
         const out = mq(
-          m('.containstest', [mTrust('<p>Trusted String</p>'), 'Inner String'])
+          m('.containstest', [m.trust('<p>Trusted String</p>'), 'Inner String'])
         )
         expect(out.contains('Inner String')).toBe(true)
         expect(out.contains('Trusted String')).toBe(true)

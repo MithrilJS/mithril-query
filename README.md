@@ -1,5 +1,5 @@
-mithril-query
-=============
+# mithril-query
+
 [![Gitter](https://img.shields.io/badge/gitter-join_chat-1dce73.svg?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIwIiB5PSI1IiBmaWxsPSIjZmZmIiB3aWR0aD0iMSIgaGVpZ2h0PSI1Ii8%2BPHJlY3QgeD0iMiIgeT0iNiIgZmlsbD0iI2ZmZiIgd2lkdGg9IjEiIGhlaWdodD0iNyIvPjxyZWN0IHg9IjQiIHk9IjYiIGZpbGw9IiNmZmYiIHdpZHRoPSIxIiBoZWlnaHQ9IjciLz48cmVjdCB4PSI2IiB5PSI2IiBmaWxsPSIjZmZmIiB3aWR0aD0iMSIgaGVpZ2h0PSI0Ii8%2BPC9zdmc%2B&logoWidth=8)](https://gitter.im/MithrilJS/mithril-query?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/MithrilJS/mithril-query.svg?branch=master)](https://travis-ci.org/MithrilJS/mithril-query)
 [![rethink.js](https://img.shields.io/badge/rethink-js-yellow.svg)](https://github.com/rethinkjs/manifest)
@@ -13,16 +13,15 @@ Query mithril virtual dom for testing purposes
 
 ## Setup
 
-In order to run tests in mithril 2.x we need to do some setup. That is to mock the dom for the mithril render and request modules.
-This can be done by requiring a 'setup' file in your 'mocha' tests with the following contents.
+In order to run tests in mithril 2.x we need to do some setup, to mock the dom for the renderer.
+Mithril query will try to do this mocking for you, if it can't find the required globals, but this
+might not work properly due to module loading order. If you load mithril-query befor everything else
+it should work as expected.
+
+In any other case, this can be done manually by calling the `ensureglobals` helper upfront (e. G. by adding if into a 'setup' file in your 'mocha' tests).
 
 ```js
-global.window = Object.assign(
-  require('mithril/test-utils/domMock.js')(),
-  require('mithril/test-utils/pushStateMock')()
-)
-global.requestAnimationFrame = callback =>
-  global.setTimeout(callback, 1000 / 60)
+require('mithril-query').ensureGlobals()
 ```
 
 ## Changes from version 3.x to 4.x
@@ -96,7 +95,6 @@ Run the test with
 
 ## API
 
-
 ### Initialise
 
 First call `mithril-query` with either a vnode or a component. You can call it
@@ -110,18 +108,18 @@ var out = mq(m('div'))
 
 // object component
 var myComponent = {
-  view: function ({ attrs }) {
+  view: function({ attrs }) {
     return m('div', attrs.text)
-  }
+  },
 }
 var out = mq(myComponent, { text: 'huhu' })
 
 // closure component
 function myComponent() {
   return {
-    view: function ({ attrs }) {
+    view: function({ attrs }) {
       return m('div', attrs.text)
-    }
+    },
   }
 }
 var out = mq(myComponent, { text: 'huhu' })
@@ -131,27 +129,27 @@ var out = mq(myComponent, { text: 'huhu' })
 
 As you can see `mq` returns an `out`-Object which has the following test-API.
 
-* `out.first(selector)` – Returns the first element that matches the selector (think `document.querySelector`).
-* `out.find(selector)` – Returns all elements that match the selector (think `document.querySelectorAll`).
-* `out.has(selector)` –  Returns `true` if any element in tree matches the selector, otherwise `false`.
-* `out.contains(string)` – Returns `true` if any element in tree contains the string, otherwise `false`.
-* `out.log(selector, [logFN])` – Small helper function to log out what was selected. Mainly for debugging
-purposes. You can give an optional function which is called with the result.
-It defaults to HTML-Pretty-Printer ([pretty-html-log](https://www.npmjs.com/package/pretty-html-log)] that logs the HTML-representation to `stdout`.
+- `out.first(selector)` – Returns the first element that matches the selector (think `document.querySelector`).
+- `out.find(selector)` – Returns all elements that match the selector (think `document.querySelectorAll`).
+- `out.has(selector)` –  Returns `true` if any element in tree matches the selector, otherwise `false`.
+- `out.contains(string)` – Returns `true` if any element in tree contains the string, otherwise `false`.
+- `out.log(selector, [logFN])` – Small helper function to log out what was selected. Mainly for debugging
+  purposes. You can give an optional function which is called with the result.
+  It defaults to HTML-Pretty-Printer ([pretty-html-log](https://www.npmjs.com/package/pretty-html-log)] that logs the HTML-representation to `stdout`.
 
 You can use these nice assertions. They throw errors if they're not fulfilled.
 See the example in the example folder.
 
-* `out.should.have([count], selector)`
+- `out.should.have([count], selector)`
 
 Throws if no element is found with selector. If `count` is given, it throws if
 count does not match.
 
-* `out.should.not.have(selector)` – Throws if an element is found with selector.
-* `out.should.have.at.least(count, selector)` – Throws if there a fewer than `count` elements matching the selector
-* `out.should.have([selector0, selector1, selector2])` – Throws there aren't at least one element for each selector.
-* `out.should.contain(string)` – Throws if no element contains `string`.
-* `out.should.not.contain(string)` - Throws if any element contains `string`.
+- `out.should.not.have(selector)` – Throws if an element is found with selector.
+- `out.should.have.at.least(count, selector)` – Throws if there a fewer than `count` elements matching the selector
+- `out.should.have([selector0, selector1, selector2])` – Throws there aren't at least one element for each selector.
+- `out.should.contain(string)` – Throws if no element contains `string`.
+- `out.should.not.contain(string)` - Throws if any element contains `string`.
 
 ### Event triggering
 
@@ -159,15 +157,15 @@ It is also possible to trigger element events like `onfocus` and `onclick` and s
 
 Attention: Currently there is no event bubbling supported.
 
-* `out.click(selector, [eventData])` – Runs `onclick` for first element that matches selector. Optional `eventData` is given
-as to the event constructor. `eventData.redraw = false` is respected.
-* `out.setValue(selector, string, [eventData])` – Runs `oninput` and `onchange` for first element that matches selector.
-* `out.trigger(selector, eventname, [eventData])` – General purpose event triggerer. Calls `eventname` on first matching element.
+- `out.click(selector, [eventData])` – Runs `onclick` for first element that matches selector. Optional `eventData` is given
+  as to the event constructor. `eventData.redraw = false` is respected.
+- `out.setValue(selector, string, [eventData])` – Runs `oninput` and `onchange` for first element that matches selector.
+- `out.trigger(selector, eventname, [eventData])` – General purpose event triggerer. Calls `eventname` on first matching element.
 
 It also supports key events
 
-* `out.keydown(selector, keycode, [eventData])` – calls `onkeydown` with `keycode`
-* `out.keydown(selector, keyname, [eventData])` – calls `onkeydown` with keycode mapped from name. Mapping is done with [this lib](https://github.com/npmcomponent/yields-keycode).
+- `out.keydown(selector, keycode, [eventData])` – calls `onkeydown` with `keycode`
+- `out.keydown(selector, keyname, [eventData])` – calls `onkeydown` with keycode mapped from name. Mapping is done with [this lib](https://github.com/npmcomponent/yields-keycode).
 
 `keyup`, `keypress` are supported as well.
 
