@@ -13,12 +13,12 @@ Query mithril virtual dom for testing purposes
 
 ## Setup
 
-In order to run tests in mithril 2.x we need to do some setup, to mock the dom for the renderer.
-Mithril query will try to do this mocking for you, if it can't find the required globals, but this
-might not work properly due to module loading order. If you load mithril-query befor everything else
+In order to run tests in mithril 2.x we need to do some dom-mocking for the renderer.
+`mithril-query` will try to do this mocking for you, if it can't find the required globals, but this
+might not work properly due to module loading order. If you load mithril-query before everything else
 it should work as expected.
 
-In any other case, this can be done manually by calling the `ensureglobals` helper upfront (e. G. by adding if into a 'setup' file in your 'mocha' tests).
+In any other case, this can be done manually by calling the `ensureGlobals` helper upfront (e. G. by adding if into a 'setup' file in your 'mocha' tests).
 
 ```js
 require('mithril-query').ensureGlobals()
