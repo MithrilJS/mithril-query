@@ -66,15 +66,8 @@ module.exports = {
 
 ```js
 /* eslint-env mocha */
-global.window = Object.assign(
-  require('mithril/test-utils/domMock.js')(),
-  require('mithril/test-utils/pushStateMock')()
-)
-global.requestAnimationFrame = callback =>
-  global.setTimeout(callback, 1000 / 60)
-
+const mq = require('mithril-query')
 const simpleModule = require('./simple')
-const mq = require('../')
 
 describe('simple module', function() {
   it('should generate appropriate output', function() {
