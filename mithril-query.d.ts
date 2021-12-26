@@ -43,6 +43,8 @@ interface MithrilQueryInstance {
     }
     have: {
       (expectedCount: number, selector: string): boolean
+      (selector: string): boolean
+      (selectors: string[]): boolean
 
       at: {
         least: (minCount: number, selector: string) => boolean

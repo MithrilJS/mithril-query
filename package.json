@@ -3,6 +3,7 @@
   "version": "4.0.1",
   "description": "Query mithril virtual dom for testing purposes",
   "main": "index.js",
+  "types": "mithril-query.d.ts",
   "scripts": {
     "test": "mocha test.js && mocha example/simple.test.js"
   },
