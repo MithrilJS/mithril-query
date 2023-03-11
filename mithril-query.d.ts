@@ -12,10 +12,10 @@ interface KeyEventOptions {
 interface MithrilQueryInstance {
   rootNode: any
   redraw: () => void
-  first: (selector: string) => any
+  first: (selector: string) => Element
   has: (selector: string) => boolean
   contains: (value: string) => string
-  find: (selector: string) => any[]
+  find: (selector: string) => Element[]
   setValue: (selector: string, value: string, silent?: boolean) => void
   focus: (selector: string, event?: Event, silent?: boolean) => void
   click: (selector: string, event?: Event, silent?: boolean) => void
@@ -43,9 +43,7 @@ interface MithrilQueryInstance {
     }
     have: {
       (expectedCount: number, selector: string): boolean
-      (selector: string): boolean
-      (selectors: string[]): boolean
-
+      (selector: string | string[]): boolean
       at: {
         least: (minCount: number, selector: string) => boolean
       }
