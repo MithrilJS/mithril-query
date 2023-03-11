@@ -242,13 +242,15 @@ function scan(api) {
   return api
 }
 
-module.exports = function init(componentOrRootNode, nodeOrAttrs) {
+module.exports = function init(componentOrRootNode, nodeOrAttrs, children) {
   const $window = global.window = domino.createWindow('')
   const render = require('mithril/render/render')($window)
   let rootNode = {
     view: () => {
       return isComponent(componentOrRootNode)
-        ? m(componentOrRootNode, nodeOrAttrs)
+        ? m(componentOrRootNode, nodeOrAttrs, children === undefined ?
+           [] :
+           children)
         : componentOrRootNode
     },
   }
