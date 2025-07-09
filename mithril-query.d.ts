@@ -10,7 +10,7 @@ interface KeyEventOptions {
 }
 
 interface MithrilQueryInstance {
-  rootNode: any
+  rootEl: any
   redraw: () => void
   first: (selector: string) => any
   has: (selector: string) => boolean
