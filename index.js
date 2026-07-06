@@ -1,12 +1,24 @@
 'use strict'
 
-const domino = require('domino')
+const { JSDOM } = require('jsdom')
 ensureGlobals()
 const m = require('mithril')
-const Event = require('domino/lib/Event')
 const code = require('yields-keycode')
 const Vnode = require('mithril/render/vnode')
 const formatHtml = require('pretty-html-log').highlight
+
+function createWindow() {
+  return new JSDOM('<!doctype html><html><body></body></html>', {
+    pretendToBeVisual: true,
+  }).window
+}
+
+function assignGlobals($window) {
+  global.window = $window
+  global.document = $window.document
+  global.requestAnimationFrame =
+    global.requestAnimationFrame || $window.requestAnimationFrame
+}
 
 function isString(thing) {
   return Object.prototype.toString.call(thing) === '[object String]'
@@ -54,10 +66,45 @@ function consoleLogHtml(els) {
   console.log(els.map(el => formatHtml(el.outerHTML)).join('---------\n'))
 }
 
+function getContainsSelectorParts(selectorString) {
+  const matches = selectorString.match(/^(.*?):contains\((.*)\)$/)
+  if (!matches) return null
+
+  const [, baseSelector, textContent] = matches
+  return { baseSelector: baseSelector || '*', textContent }
+}
+
+function getBooleanPropSelectorParts(selectorString) {
+  const matches = selectorString.match(/^(.*?)\[(checked|selected)\]$/)
+  if (!matches) return null
+
+  const [, baseSelector, propName] = matches
+  return { baseSelector: baseSelector || '*', propName }
+}
+
 function scan(api) {
   const rootEl = api.rootEl
 
   function find(selectorString, node) {
+    const containsSelectorParts = getContainsSelectorParts(selectorString)
+    if (containsSelectorParts) {
+      const { baseSelector, textContent } = containsSelectorParts
+      return Array.from(node.querySelectorAll(baseSelector)).filter(function(
+        el
+      ) {
+        return el.textContent.includes(textContent)
+      })
+    }
+
+    const booleanPropSelectorParts = getBooleanPropSelectorParts(selectorString)
+    if (booleanPropSelectorParts) {
+      const { baseSelector, propName } = booleanPropSelectorParts
+      return Array.from(node.querySelectorAll(baseSelector)).filter(function(
+        el
+      ) {
+        return el[propName] === true
+      })
+    }
     return Array.from(node.querySelectorAll(selectorString))
   }
 
@@ -142,9 +189,9 @@ function scan(api) {
   function setValue(selector, string, eventData = {}) {
     const el = first(selector)
     el.value = string
-    const inputEvent = new Event('input', eventData)
-    const changeEvent = new Event('change', eventData)
-    const keyupEvent = new Event('keyup', eventData)
+    const inputEvent = createEvent('input', eventData)
+    const changeEvent = createEvent('change', eventData)
+    const keyupEvent = createEvent('keyup', eventData)
     el.dispatchEvent(inputEvent)
     el.dispatchEvent(changeEvent)
     el.dispatchEvent(keyupEvent)
@@ -159,7 +206,7 @@ function scan(api) {
 
   function trigger(eventName) {
     return function(selector, eventData) {
-      const event = new Event(eventName, eventData)
+      const event = createEvent(eventName, eventData)
       const el = first(selector)
       el.dispatchEvent(event)
       if (event.redraw !== false) {
@@ -243,7 +290,8 @@ function scan(api) {
 }
 
 module.exports = function init(componentOrRootNode, nodeOrAttrs) {
-  const $window = global.window = domino.createWindow('')
+  const $window = createWindow()
+  assignGlobals($window)
   const render = require('mithril/render/render')($window)
   let rootNode = {
     view: () => {
@@ -269,8 +317,23 @@ module.exports = function init(componentOrRootNode, nodeOrAttrs) {
 }
 
 function ensureGlobals() {
-  global.window = global.window || domino.createWindow('')
-  global.requestAnimationFrame = global.requestAnimationFrame || global.window.requestAnimationFrame 
+  assignGlobals(global.window || createWindow())
+}
+
+function createEvent(eventName, eventData = {}) {
+  const event = new global.window.Event(eventName, eventData)
+  for (const key in eventData) {
+    if (key === 'type') continue
+    try {
+      event[key] = eventData[key]
+    } catch (error) {
+      Object.defineProperty(event, key, {
+        configurable: true,
+        value: eventData[key],
+      })
+    }
+  }
+  return event
 }
 
 module.exports.ensureGlobals = ensureGlobals

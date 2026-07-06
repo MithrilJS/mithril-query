@@ -14,6 +14,21 @@ const WebpackBabelClassEsComponent = require('./fixtures/webpack-babel-transform
 const WebpackBabelClassEsComponentWithDestructuring = require('./fixtures/webpack-babel-transform-class-component-esmodules-with-destructuring')
 
 describe('mithril query', function() {
+  describe('svg styling', function() {
+    it('should render styled svg elements', function() {
+      const out = mq(
+        m('svg', { style: '--icon-size: 1rem' }, [
+          m('path', {
+            style: { fill: 'red', transform: 'rotate(1deg)' },
+          }),
+        ])
+      )
+
+      expect(out.find('svg').length).toBe(1)
+      expect(out.find('path').length).toBe(1)
+    })
+  })
+
   describe('basic selection of things', function() {
     let el,
       out,

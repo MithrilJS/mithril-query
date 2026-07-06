@@ -1,13 +1,7 @@
 /* eslint-env mocha */
-global.window = Object.assign(
-  require('mithril/test-utils/domMock.js')(),
-  require('mithril/test-utils/pushStateMock')()
-)
-global.requestAnimationFrame = callback =>
-  global.setTimeout(callback, 1000 / 60)
-
-const simpleModule = require('./simple')
 const mq = require('../')
+mq.ensureGlobals()
+const simpleModule = require('./simple')
 
 describe('simple module', function() {
   it('should generate appropriate output', function() {
@@ -18,6 +12,6 @@ describe('simple module', function() {
     output.should.have('.barClass')
     output.should.have(':contains(barContent)')
     output.should.contain('barContent')
-    output.log('div');
+    output.log('div')
   })
 })
