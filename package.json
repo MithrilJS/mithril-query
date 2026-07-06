@@ -1,6 +1,6 @@
 {
   "name": "mithril-query",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Query mithril virtual dom for testing purposes",
   "main": "index.js",
   "types": "mithril-query.d.ts",
@@ -39,7 +39,6 @@
   },
   "readmeFilename": "README.md",
   "gitHead": "b8930b06501d2083a31f674c5fd8d4f9ffe34eb4",
-  "_id": "mithril-query@0.1.8",
   "_shasum": "2a0918669b7078b5de2126cc5ed3d6a478d0bf17",
   "_from": "mithril-query@^0.1.2"
 }
